@@ -3,7 +3,7 @@ require 'sinatra'
 require 'sinatra/reloader'
 require_relative 'tweet.rb'
 get '/' do
-	'under costruction'
+	'under construction'
 end
 
 # get '/random_tweet' do
