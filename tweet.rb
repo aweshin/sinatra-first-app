@@ -6,11 +6,13 @@ class Tweet
 	def initialize
 		@text = File.open('sentences.txt').read.split("\n")
 		# テキストの整形
-        @text.each do |t|
-            t.gsub!(/[0-9]/, "")
-            t.gsub!(/『.+?』/u, "")
-            t.gsub!(/（.+?）/u, "")
-        end
+		@text.each do |t|
+			t.gsub!(/[0-9]/, "")
+			t.gsub!(/『.+?』/u, "")
+			t.gsub!(/（.+?）/u, "")
+			t << "。" if t[-1] != "。"
+		end
+		@text.shuffle!
 
 		@client = Twitter::REST::Client.new(
 			consumer_key:        ENV['TWITTER_CONSUMER_KEY'],
