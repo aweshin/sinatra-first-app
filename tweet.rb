@@ -10,7 +10,6 @@ class Tweet
 			t.gsub!(/[0-9]/, "")
 			t.gsub!(/『.+?』/u, "")
 			t.gsub!(/（.+?）/u, "")
-			t << "。" if t[-1] != "。"
 		end
 		@text.shuffle!
 
@@ -76,17 +75,17 @@ class Tweet
 		prefix = ["BEGIN","BEGIN"]
 		ret = ""
 		loop do
-		    n = @dic[prefix].length
-		    prefix = [prefix[1] , @dic[prefix][random.rand(0..n-1)]]
-		    ret += prefix[0] if prefix[0] != "BEGIN"
-		    if @dic[prefix].last == "END"
-		        ret += prefix[1]
-		        break
-		    end
+			n = @dic[prefix].length
+			prefix = [prefix[1] , @dic[prefix][random.rand(0..n-1)]]
+			ret += prefix[0] if prefix[0] != "BEGIN"
+			if @dic[prefix].last == "END"
+				ret += prefix[1]
+				break
+			end
 		end
 		period = [-1]
 		ret.length.times do |i|
-		    period << i if ret[i] == "。"
+			period << i if ret[i] == "。"
 		end
 		m = random.rand(1..period.length-1)
 		ret[period[m-1]+1..period[m]]
