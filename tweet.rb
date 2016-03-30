@@ -39,7 +39,7 @@ class Tweet
   def update(client, tweet)
     return nil unless tweet
     begin
-    tweet = (tweet.length > 140) ? tweet[0..139].to_s : tweet
+      tweet = (tweet.length > 140) ? tweet[0..139].to_s : tweet
       client.update(tweet.chomp)
     rescue => e
       nil
