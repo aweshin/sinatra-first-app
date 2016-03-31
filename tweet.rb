@@ -2,6 +2,9 @@ require 'rubygems'
 require 'twitter'
 require 'natto'
 
+#文字数制限１４０字
+TWEET_LIMIT = 140
+
 class Tweet
   def initialize
     @text = File.open('sentences.txt').read.split("\n")
@@ -10,6 +13,7 @@ class Tweet
       t.gsub!(/[0-9]/, "")
       t.gsub!(/『.+?』/u, "")
       t.gsub!(/（.+?）/u, "")
+      t << "。" if t[-1] != "。"
     end
     @text.shuffle!
 
@@ -20,6 +24,8 @@ class Tweet
       access_token_secret: ENV['TWITTER_ACCESS_TOKEN_SECRET']
     )
     @dic = {}
+    # ランダムインスタンスの生成
+    @random = Random.new
   end
 
   def random_tweet
@@ -39,7 +45,7 @@ class Tweet
   def update(client, tweet)
     return nil unless tweet
     begin
-      tweet = (tweet.length > 140) ? tweet[0..139].to_s : tweet
+      tweet = (tweet.length > TWEET_LIMIT) ? tweet[0,TWEET_LIMIT] : tweet
       client.update(tweet.chomp)
     rescue => e
       nil
@@ -68,26 +74,26 @@ class Tweet
   end
 
   # 辞書を元に作文を行う
-  def make_sentence
-    # ランダムインスタンスの生成
-    random = Random.new
+ def make_sentence
     # スタートは begin,beginから
     prefix = ["BEGIN","BEGIN"]
-    ret = ""
+    ss = ""
     loop do
       n = @dic[prefix].length
-      prefix = [prefix[1] , @dic[prefix][random.rand(0..n-1)]]
-      ret += prefix[0] if prefix[0] != "BEGIN"
+      prefix = [prefix[1] , @dic[prefix][@random.rand(0..n-1)]]
+      ss += prefix[0] if prefix[0] != "BEGIN"
       if @dic[prefix].last == "END"
-        ret += prefix[1]
+        ss += prefix[1]
         break
       end
     end
-    period = [-1]
-    ret.length.times do |i|
-      period << i if ret[i] == "。"
-    end
-    m = random.rand(1..period.length-1)
-    ret[period[m-1]+1..period[m]]
+    ret = choice_sentence(ss)
+    ret.gsub!(/「|」/u, " ")
+    ret
+  end
+
+  def choice_sentence(ss)
+    t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == "。" || c == "」" } || TWEET_LIMIT - 1
+    ss[0,t+1]
   end
 end
