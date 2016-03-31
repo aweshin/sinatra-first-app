@@ -88,7 +88,11 @@ class Tweet
       end
     end
     ret = choice_sentence(ss)
-    ret.gsub!(/「|」/u, " ")
+    ret.gsub!(/「|」/u, ' ')
+    # 句読点の重複排除
+    ["？", "！", "。"].repeated_permutation(2) do |dw|
+      ret.gsub!(dw.join(' '), dw[0])
+    end
     ret
   end
 
