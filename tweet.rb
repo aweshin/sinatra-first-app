@@ -13,7 +13,9 @@ class Tweet
       t.gsub!(/[0-9]/, "")
       t.gsub!(/『.+?』/u, "")
       t.gsub!(/（.+?）/u, "")
-      t << "。" if t[-1] != "。"
+      t << "。" unless t[-1].match(/？|！|。/)
+      idx = (1...t.size).each_with_object([]){ |i, acc| acc << i if t[i] == "」" && t[i-1].match(/？|！|。/) }
+      idx.map.with_index{ |i,j| i + j }.each{ |i| t.insert(i, "。") }
     end
     @text.shuffle!
 
@@ -36,6 +38,7 @@ class Tweet
   def random_tweet_using_mecab
     # 形態素解析して作文する
     make_dic(@text)
+    @dic.each_value{ |t| t.uniq! }
     tweet = make_sentence
     update(@client, tweet)
   end
@@ -88,16 +91,17 @@ class Tweet
       end
     end
     ret = choice_sentence(ss)
-    ret.gsub!(/「|」/u, ' ')
+    ret.gsub!(/「|」/u, '')
+    ret.gsub!(/門番|農夫/u, '')
     # 句読点の重複排除
     ["？", "！", "。"].repeated_permutation(2) do |dw|
-      ret.gsub!(dw.join(' '), dw[0])
+      ret.gsub!(dw.join, dw[0])
     end
     ret
   end
 
   def choice_sentence(ss)
-    t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == "。" || c == "」" } || TWEET_LIMIT - 1
+    t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == "。" } || TWEET_LIMIT - 1
     ss[0,t+1]
   end
 end
