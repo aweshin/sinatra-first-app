@@ -11,8 +11,8 @@ class Tweet
     # テキストの整形
     @text.each do |t|
       t.gsub!(/[0-9]/, "")
-      t.gsub!(/『.+?』/u, "")
-      t.gsub!(/（.+?）/u, "")
+      t.gsub!(/『.+?』/, "")
+      t.gsub!(/（.+?）/, "")
       t << "。" unless t[-1].match(/？|！|。/)
       idx = (1...t.size).each_with_object([]){ |i, acc| acc << i if t[i] == "」" && t[i-1].match(/？|！|。/) }
       idx.map.with_index{ |i,j| i + j }.each{ |i| t.insert(i, "。") }
@@ -35,8 +35,8 @@ class Tweet
     update(@client, tweet)
   end
 
+  # 形態素解析して作文する
   def random_tweet_using_mecab
-    # 形態素解析して作文する
     make_dic(@text)
     @dic.each_value{ |t| t.uniq! }
     tweet = make_sentence
@@ -77,7 +77,7 @@ class Tweet
   end
 
   # 辞書を元に作文を行う
- def make_sentence
+  def make_sentence
     # スタートは begin,beginから
     prefix = ["BEGIN","BEGIN"]
     ss = ""
@@ -91,7 +91,9 @@ class Tweet
       end
     end
     ret = choice_sentence(ss)
+    # カギカッコが文の構成上おかしなことになるので、なくす
     ret.gsub!(/「|」/u, '')
+    # 同様に文脈がおかしくなるので、なくす
     ret.gsub!(/門番|農夫/u, '')
     # 句読点の重複排除
     ["？", "！", "。"].repeated_permutation(2) do |dw|
@@ -100,6 +102,7 @@ class Tweet
     ret
   end
 
+  # 文字数制限を加味する
   def choice_sentence(ss)
     t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == "。" } || TWEET_LIMIT - 1
     ss[0,t+1]
