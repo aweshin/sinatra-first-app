@@ -10,6 +10,6 @@ end
 #   Tweet.new.random_tweet
 # end
 
-# get '/random_tweet_using_mecab' do
-#   Tweet.new.random_tweet_using_mecab
-# end
+get '/random_tweet_using_mecab' do
+  Tweet.new.random_tweet_using_mecab
+end

@@ -4,20 +4,22 @@ require 'natto'
 
 #文字数制限１４０字
 TWEET_LIMIT = 140
+# テキストの取捨選択
+SENTENCE_NO = 15..-1
 
 class Tweet
   def initialize
     @text = File.open('sentences.txt').read.split("\n")
     # テキストの整形
     @text.each do |t|
-      t.gsub!(/[0-9]/, "")
-      t.gsub!(/『.+?』/, "")
-      t.gsub!(/（.+?）/, "")
-      t << "。" unless t[-1].match(/？|！|。/)
+      t.gsub!(/『.*?』/, '')
+      t.gsub!(/（.*?）/u, '')
+      t << '。' unless t[-1].match(/？|！|。/)
       idx = (1...t.size).each_with_object([]){ |i, acc| acc << i if t[i] == "」" && t[i-1].match(/？|！|。/) }
-      idx.map.with_index{ |i,j| i + j }.each{ |i| t.insert(i, "。") }
+      idx.map.with_index{ |i,j| i + j }.each{ |i| t.insert(i, '。') }
     end
-    @text.shuffle!
+    # テキストの取捨選択
+    @text = @text[SENTENCE_NO].shuffle
 
     @client = Twitter::REST::Client.new(
       consumer_key:        ENV['TWITTER_CONSUMER_KEY'],
@@ -58,7 +60,7 @@ class Tweet
   # マルコフ連鎖用辞書の作成
   def make_dic(items)
     nm = Natto::MeCab.new
-    data = ["BEGIN","BEGIN"]
+    data = ['BEGIN','BEGIN']
     @text.each do |t|
       nm.parse(t) do |a|
         if a.surface != nil
@@ -66,8 +68,7 @@ class Tweet
         end
       end
     end
-    data << "END"
-    # p data
+    data << 'END'
     data.each_cons(3).each do |a|
       suffix = a.pop
       prefix = a
@@ -79,24 +80,24 @@ class Tweet
   # 辞書を元に作文を行う
   def make_sentence
     # スタートは begin,beginから
-    prefix = ["BEGIN","BEGIN"]
-    ss = ""
+    prefix = ['BEGIN','BEGIN']
+    ss = ''
     loop do
       n = @dic[prefix].length
       prefix = [prefix[1] , @dic[prefix][@random.rand(0..n-1)]]
-      ss += prefix[0] if prefix[0] != "BEGIN"
-      if @dic[prefix].last == "END"
+      ss += prefix[0] if prefix[0] != 'BEGIN'
+      if @dic[prefix].last == 'END'
         ss += prefix[1]
         break
       end
     end
     ret = choice_sentence(ss)
     # カギカッコが文の構成上おかしなことになるので、なくす
-    ret.gsub!(/「|」/u, '')
+    ret.gsub!(/「|」/, '')
     # 同様に文脈がおかしくなるので、なくす
-    ret.gsub!(/門番|農夫/u, '')
+    ret.gsub!(/門番|農夫|門番、/, '')
     # 句読点の重複排除
-    ["？", "！", "。"].repeated_permutation(2) do |dw|
+    ['？', '！', '。'].repeated_permutation(2) do |dw|
       ret.gsub!(dw.join, dw[0])
     end
     ret
@@ -104,7 +105,7 @@ class Tweet
 
   # 文字数制限を加味する
   def choice_sentence(ss)
-    t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == "。" } || TWEET_LIMIT - 1
+    t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == '。' } || TWEET_LIMIT - 1
     ss[0,t+1]
   end
 end
