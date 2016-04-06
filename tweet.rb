@@ -5,7 +5,7 @@ require 'natto'
 #文字数制限１４０字
 TWEET_LIMIT = 140
 # テキストの取捨選択
-SENTENCE_NO = 15..-1
+SENTENCE_NO = 56..-1
 
 class Tweet
   def initialize
