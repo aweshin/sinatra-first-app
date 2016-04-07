@@ -5,7 +5,7 @@ require 'natto'
 #文字数制限１４０字
 TWEET_LIMIT = 140
 # テキストの取捨選択
-SENTENCE_NO = 0..-1
+SENTENCE_NO = 33..-1
 
 class Tweet
   def initialize
@@ -79,19 +79,7 @@ class Tweet
 
   # 辞書を元に作文を行う
   def make_sentence
-    # スタートは begin,beginから
-    prefix = ['BEGIN','BEGIN']
-    ss = ''
-    loop do
-      n = @dic[prefix].length
-      prefix = [prefix[1] , @dic[prefix][@random.rand(0..n-1)]]
-      ss += prefix[0] if prefix[0] != 'BEGIN'
-      if @dic[prefix].last == 'END'
-        ss += prefix[1]
-        break
-      end
-    end
-    ret = choice_sentence(ss)
+    ret = choice_sentence
     # カギカッコが文の構成上おかしなことになるので、なくす
     ret.gsub!(/「|」/, '')
     # 同様に文脈がおかしくなるので、なくす
@@ -104,8 +92,29 @@ class Tweet
   end
 
   # 文字数制限を加味する
-  def choice_sentence(ss)
-    t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == '。' } || TWEET_LIMIT - 1
-    ss[0,t+1]
+  def choice_sentence
+    loop do
+      ss = connect
+      # TWEET_LIMIT以内に1文がおされば
+      if t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == '。' }
+        return ss[0,t+1]
+      end
+    end
+  end
+
+  def connect
+    # スタートは begin,beginから
+    prefix = ['BEGIN','BEGIN']
+    ss = ''
+    loop do
+      n = @dic[prefix].length
+      prefix = [prefix[1] , @dic[prefix][@random.rand(0..n-1)]]
+      ss += prefix[0] if prefix[0] != 'BEGIN'
+      if @dic[prefix].last == 'END'
+        ss += prefix[1]
+        break
+      end
+    end
+    ss
   end
 end
