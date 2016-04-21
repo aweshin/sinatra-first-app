@@ -14,9 +14,6 @@ class Tweet
     @text.each do |t|
       t.gsub!(/『.*?』/, '')
       t.gsub!(/（.*?）/u, '')
-      t << '。' unless t[-1].match(/？|！|。/)
-      idx = (1...t.size).each_with_object([]){ |i, acc| acc << i if t[i] == "」" && t[i-1].match(/？|！|。/) }
-      idx.map.with_index{ |i,j| i + j }.each{ |i| t.insert(i, '。') }
     end
     # テキストの取捨選択
     @text = @text[SENTENCE_NO].shuffle
@@ -88,6 +85,11 @@ class Tweet
 
   # 辞書を元に作文を行う
   def make_sentence
+    @text.each do |t|
+      t << '。' unless t[-1].match(/？|！|。/)
+      idx = (1...t.size).each_with_object([]){ |i, acc| acc << i if t[i] == "」" && t[i-1].match(/？|！|。/) }
+      idx.map.with_index{ |i,j| i + j }.each{ |i| t.insert(i, '。') }
+    end
     ret = choice_sentence
     # カギカッコが文の構成上おかしなことになるので、なくす
     ret.gsub!(/「|」/, '')
