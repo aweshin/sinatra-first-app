@@ -5,7 +5,7 @@ require 'natto'
 #文字数制限１４０字
 TWEET_LIMIT = 140
 # テキストの取捨選択
-SENTENCE_NO = 79..-1
+SENTENCE_NO = 0..-1
 
 class Tweet
   def initialize
@@ -33,8 +33,13 @@ class Tweet
   end
 
   def random_tweet
-    tweet = @text[rand(@text.length)]
-    update(@client, tweet)
+    loop do
+      tweet = @text[@random.rand(@text.length)]
+      if tweet.length <= TWEET_LIMIT
+        update(@client, tweet)
+        return
+      end
+    end
   end
 
   # 形態素解析して作文する
@@ -45,12 +50,16 @@ class Tweet
     update(@client, tweet)
   end
 
+  def random_tweet_hybrid
+    @random.rand(10) > 3 ? random_tweet : random_tweet_using_mecab
+  end
+
   private
 
   def update(client, tweet)
     return nil unless tweet
     begin
-      tweet = (tweet.length > TWEET_LIMIT) ? tweet[0,TWEET_LIMIT] : tweet
+      # tweet = (tweet.length > TWEET_LIMIT) ? tweet[0,TWEET_LIMIT] : tweet
       client.update(tweet.chomp)
     rescue => e
       nil
@@ -108,7 +117,7 @@ class Tweet
     ss = ''
     loop do
       n = @dic[prefix].length
-      prefix = [prefix[1] , @dic[prefix][@random.rand(0..n-1)]]
+      prefix = [prefix[1] , @dic[prefix][@random.rand(n)]]
       ss += prefix[0] if prefix[0] != 'BEGIN'
       if @dic[prefix].last == 'END'
         ss += prefix[1]
