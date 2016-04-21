@@ -32,8 +32,9 @@ class Tweet
   def random_tweet
     loop do
       tweet = @text[@random.rand(@text.length)]
-      if tweet.length <= TWEET_LIMIT
-        update(@client, tweet)
+       # TWEET_LIMIT以内に1文以上がおさまれば
+      if t = tweet[0,TWEET_LIMIT].split('').rindex{ |c| c == '。' }
+        update(@client, tweet[0..t])
         return
       end
     end
@@ -106,9 +107,9 @@ class Tweet
   def choice_sentence
     loop do
       ss = connect
-      # TWEET_LIMIT以内に1文がおされば
+      # TWEET_LIMIT以内に1文以上がおさまれば
       if t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == '。' }
-        return ss[0,t+1]
+        return ss[0..t]
       end
     end
   end
