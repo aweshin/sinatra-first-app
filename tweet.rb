@@ -5,7 +5,7 @@ require 'natto'
 #文字数制限１４０字
 TWEET_LIMIT = 140
 # テキストの取捨選択
-SENTENCE_NO = 0..-1
+SENTENCE_NO = 79..-1
 
 class Tweet
   def initialize
@@ -83,7 +83,7 @@ class Tweet
     # カギカッコが文の構成上おかしなことになるので、なくす
     ret.gsub!(/「|」/, '')
     # 同様に文脈がおかしくなるので、なくす
-    ret.gsub!(/門番|農夫|門番、/, '')
+    ret.gsub!(/門番|農夫|門番、|農夫、/, '')
     # 句読点の重複排除
     ['？', '！', '。'].repeated_permutation(2) do |dw|
       ret.gsub!(dw.join, dw[0])
