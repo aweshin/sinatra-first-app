@@ -49,7 +49,8 @@ class Tweet
   end
 
   def random_tweet_hybrid
-    @random.rand(10) > 3 ? random_tweet : random_tweet_using_mecab
+    # 7割普通、 3割mecab
+    @random.rand(10) > 2 ? random_tweet : random_tweet_using_mecab
   end
 
   private
