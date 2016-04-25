@@ -12,7 +12,6 @@ class Tweet
     @text = File.open('sentences.txt').read.split("\n")
     # テキストの整形
     @text.each do |t|
-      t.gsub!(/『.*?』/, '')
       t.gsub!(/（.*?）/u, '')
     end
     # テキストの取捨選択
@@ -32,8 +31,7 @@ class Tweet
   def random_tweet
     loop do
       tweet = @text[@random.rand(@text.length)]
-       # TWEET_LIMIT以内に1文以上がおさまれば
-      if t = tweet[0,TWEET_LIMIT].split('').rindex{ |c| c == '。' }
+      if t = check_limit(tweet)
         update(@client, tweet[0..t])
         return
       end
@@ -44,7 +42,7 @@ class Tweet
   def random_tweet_using_mecab
     make_dic(@text)
     @dic.each_value{ |t| t.uniq! }
-    tweet = make_sentence
+    tweet = choice_sentence
     update(@client, tweet)
   end
 
@@ -54,6 +52,11 @@ class Tweet
   end
 
   private
+
+  # TWEET_LIMIT以内に1文以上がおさまるか
+  def check_limit(tweet)
+    tweet[0,TWEET_LIMIT].split('').rindex{ |c| c == '。' || c == '！' || c == '？' }
+  end
 
   def update(client, tweet)
     return nil unless tweet
@@ -85,32 +88,12 @@ class Tweet
     end
   end
 
-  # 辞書を元に作文を行う
-  def make_sentence
-    @text.each do |t|
-      t << '。' unless t[-1].match(/？|！|。/)
-      idx = (1...t.size).each_with_object([]){ |i, acc| acc << i if t[i] == "」" && t[i-1].match(/？|！|。/) }
-      idx.map.with_index{ |i,j| i + j }.each{ |i| t.insert(i, '。') }
-    end
-    ret = choice_sentence
-    # カギカッコが文の構成上おかしなことになるので、なくす
-    ret.gsub!(/「|」/, '')
-    # 同様に文脈がおかしくなるので、なくす
-    ret.gsub!(/門番|農夫|門番、|農夫、/, '')
-    # 句読点の重複排除
-    ['？', '！', '。'].repeated_permutation(2) do |dw|
-      ret.gsub!(dw.join, dw[0])
-    end
-    ret
-  end
-
-  # 文字数制限を加味する
+  # 辞書を元に作文を行う。文字数制限を加味する。
   def choice_sentence
     loop do
-      ss = connect
-      # TWEET_LIMIT以内に1文以上がおさまれば
-      if t = ss[0,TWEET_LIMIT].split('').rindex{ |c| c == '。' }
-        return ss[0..t]
+      tweet = connect
+      if t = check_limit(tweet)
+        return tweet[0..t]
       end
     end
   end
