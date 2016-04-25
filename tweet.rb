@@ -41,7 +41,6 @@ class Tweet
   # 形態素解析して作文する
   def random_tweet_using_mecab
     make_dic(@text)
-    @dic.each_value{ |t| t.uniq! }
     tweet = choice_sentence
     update(@client, tweet)
   end
