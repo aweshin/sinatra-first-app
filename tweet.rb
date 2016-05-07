@@ -69,6 +69,9 @@ class Tweet
 
   # マルコフ連鎖用辞書の作成
   def make_dic(items)
+    @text.each do |t|
+      t.gsub!(/「|」/u, '')
+    end
     nm = Natto::MeCab.new
     data = ['BEGIN','BEGIN']
     @text.each do |t|
