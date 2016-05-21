@@ -5,17 +5,21 @@ require 'natto'
 #文字数制限１４０字
 TWEET_LIMIT = 140
 # テキストの取捨選択
-SENTENCE_NO = 0..-1
+SENTENCE_NO = [30-1..44-1, 71-1..-1]
 
 class Tweet
   def initialize
-    @text = File.open('sentences.txt').read.split("\n")
+    raw_text = File.open('sentences.txt').read.split("\n")
     # テキストの整形
-    @text.each do |t|
+    raw_text.each do |t|
       t.gsub!(/（.*?）/u, '')
     end
     # テキストの取捨選択
-    @text = @text[SENTENCE_NO].shuffle
+    @text = []
+    SENTENCE_NO.each do |i|
+      @text += raw_text[i]
+    end
+    @text.shuffle!
 
     @client = Twitter::REST::Client.new(
       consumer_key:        ENV['TWITTER_CONSUMER_KEY'],
