@@ -13,7 +13,7 @@ class Tweet
     # テキストの整形
     raw_text.each do |t|
       while t.include?('（') || t.include?('）')
-        t.gsub!(/（.[^（）]*?）/u, '')
+        t.gsub!(/（.[^（）]*?）/, '')
       end
     end
     # テキストの取捨選択
@@ -60,7 +60,7 @@ class Tweet
 
   # TWEET_LIMIT以内に1文以上がおさまるか
   def check_limit(tweet)
-    tweet[0,TWEET_LIMIT].split('').rindex{ |c| c == '。' || c == '！' || c == '？' }
+    tweet[0,TWEET_LIMIT].rindex(/。|！|？/)
   end
 
   def update(client, tweet)
@@ -76,7 +76,7 @@ class Tweet
   # マルコフ連鎖用辞書の作成
   def make_dic(items)
     @text.each do |t|
-      t.gsub!(/「|」/u, '')
+      t.gsub!(/「|」/, '')
     end
     nm = Natto::MeCab.new
     data = ['BEGIN','BEGIN']
