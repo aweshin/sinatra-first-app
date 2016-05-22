@@ -12,7 +12,9 @@ class Tweet
     raw_text = File.open('sentences.txt').read.split("\n")
     # テキストの整形
     raw_text.each do |t|
-      t.gsub!(/（.*?）/u, '')
+      while t.include?('（') || t.include?('）')
+        t.gsub!(/（.[^（）]*?）/u, '')
+      end
     end
     # テキストの取捨選択
     @text = []
