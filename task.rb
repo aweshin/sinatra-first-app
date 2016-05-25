@@ -1,2 +1,2 @@
 require_relative 'tweet.rb'
-Tweet.new.random_tweet_hybrid
+Tweet.new.normal_tweet

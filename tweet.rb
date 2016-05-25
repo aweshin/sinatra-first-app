@@ -5,7 +5,7 @@ require 'natto'
 #文字数制限１４０字
 TWEET_LIMIT = 140
 # テキストの取捨選択
-SENTENCE_NO = [30-1..44-1, 71-1..-1]
+SENTENCE_NO = [31-1..44-1, 71-1..-1]
 
 class Tweet
   def initialize
@@ -21,7 +21,6 @@ class Tweet
     SENTENCE_NO.each do |i|
       @text += raw_text[i]
     end
-    @text.shuffle!
 
     @client = Twitter::REST::Client.new(
       consumer_key:        ENV['TWITTER_CONSUMER_KEY'],
@@ -32,28 +31,33 @@ class Tweet
     @dic = {}
     # ランダムインスタンスの生成
     @random = Random.new
+    #ツイート数の取得
+    @tweet_count = @client.user.tweets_count
   end
 
-  def random_tweet
+  def normal_tweet
     loop do
-      tweet = @text[@random.rand(@text.length)]
+      index = @tweet_count % @text.size
+      tweet = @text[index]
       if t = check_limit(tweet)
         update(@client, tweet[0..t])
         return
       end
+      index = (index + 1) % @text.size
     end
   end
 
   # 形態素解析して作文する
   def random_tweet_using_mecab
+    @text.shuffle!
     make_dic(@text)
     tweet = choice_sentence
     update(@client, tweet)
   end
 
-  def random_tweet_hybrid
+  def tweet_hybrid
     # 7割普通、 3割mecab
-    @random.rand(10) > 2 ? random_tweet : random_tweet_using_mecab
+    @random.rand(10) > 2 ? normal_tweet : random_tweet_using_mecab
   end
 
   private
