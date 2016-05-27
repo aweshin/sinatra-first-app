@@ -37,7 +37,7 @@ class Tweet
 
   def normal_tweet
     loop do
-      index = (@tweet_count - 40) % @text.size
+      index = (@tweet_count + 7) % @text.size
       tweet = @text[index]
       if t = check_limit(tweet)
         update(@client, tweet[0..t])
