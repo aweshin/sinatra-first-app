@@ -31,19 +31,19 @@ class Tweet
     @dic = {}
     # ランダムインスタンスの生成
     @random = Random.new
-    #ツイート数の取得
-    @tweet_count = @client.user.tweets_count
+    #最新のツイートを取得
+    @last_tweet = @client.user_timeline("aweshin_bot", :count => 1)
   end
 
   def normal_tweet
+    index = @text.map{ |t| t[0..check_limit(t)] }.index(@last_tweet)
     loop do
-      index = (@tweet_count + 7) % @text.size
+      index = (index + 1) % @text.size
       tweet = @text[index]
-      if t = check_limit(tweet)
-        update(@client, tweet[0..t])
+      if i = check_limit(tweet)
+        update(@client, tweet[0..i])
         return
       end
-      index = (index + 1) % @text.size
     end
   end
 
@@ -64,7 +64,7 @@ class Tweet
 
   # TWEET_LIMIT以内に1文以上がおさまるか
   def check_limit(tweet)
-    tweet[0,TWEET_LIMIT].rindex(/。|！|？/)
+    tweet[0,TWEET_LIMIT].rindex(/。|！|？|」|「|『|』/)
   end
 
   def update(client, tweet)
@@ -104,8 +104,8 @@ class Tweet
   def choice_sentence
     loop do
       tweet = connect
-      if t = check_limit(tweet)
-        return tweet[0..t]
+      if i = check_limit(tweet)
+        return tweet[0..i]
       end
     end
   end
