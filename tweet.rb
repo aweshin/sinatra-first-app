@@ -5,7 +5,7 @@ require 'natto'
 #文字数制限１４０字
 TWEET_LIMIT = 140
 # テキストの取捨選択
-SENTENCE_NO = [31-1..44-1, 71-1..-1]
+SENTENCE_NO = [1-1..-1]
 
 class Tweet
   def initialize
@@ -32,11 +32,12 @@ class Tweet
     # ランダムインスタンスの生成
     @random = Random.new
     #最新のツイートを取得
-    @last_tweet = @client.user_timeline("aweshin_bot", :count => 1)
+    @last_tweet = @client.home_timeline(:count => 1)[0].text
   end
 
   def normal_tweet
     index = @text.map{ |t| t[0..check_limit(t)] }.index(@last_tweet)
+    index = @random.rand(@text.size) unless index
     loop do
       index = (index + 1) % @text.size
       tweet = @text[index]
@@ -64,7 +65,7 @@ class Tweet
 
   # TWEET_LIMIT以内に1文以上がおさまるか
   def check_limit(tweet)
-    tweet[0,TWEET_LIMIT].rindex(/。|！|？|」|「|『|』/)
+    tweet[0,TWEET_LIMIT].rindex(/。|！|？|『|』|─/)
   end
 
   def update(client, tweet)
