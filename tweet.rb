@@ -36,16 +36,10 @@ class Tweet
   end
 
   def normal_tweet
-    index = @text.map{ |t| t[0..check_limit(t)] }.index(@last_tweet)
+    @text = @text.flat_map{ |t| check_limit(t) }
+    index = @text.index(@last_tweet)
     index = @random.rand(@text.size) unless index
-    loop do
-      index = (index + 1) % @text.size
-      tweet = @text[index]
-      if i = check_limit(tweet)
-        update(@client, tweet[0..i])
-        return
-      end
-    end
+    update(@client, @text[(index + 1) % @text.size])
   end
 
   # 形態素解析して作文する
@@ -64,8 +58,13 @@ class Tweet
   private
 
   # TWEET_LIMIT以内に1文以上がおさまるか
-  def check_limit(tweet)
-    tweet[0,TWEET_LIMIT].rindex(/。|！|？|『|』|─/)
+  def check_limit(text)
+    ret = []
+    loop do
+      index = text[0,TWEET_LIMIT].rindex(/。|！|？|──/)
+      return ret unless index
+      ret << text.slice!(0, index + 1)
+    end
   end
 
   def update(client, tweet)
@@ -105,8 +104,8 @@ class Tweet
   def choice_sentence
     loop do
       tweet = connect
-      if i = check_limit(tweet)
-        return tweet[0..i]
+      if (ret = check_limit(tweet)).size != 0
+        return ret[@random.rand(ret.size)]
       end
     end
   end
