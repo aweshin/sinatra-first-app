@@ -40,7 +40,7 @@ class Tweet
     index = @text.index(@last_tweet)
     index = @random.rand(@text.size) unless index
     tweet = @text[(index + 1) % @text.size]
-    if tweet == '遺伝の世界とミームの世界の対応表'
+    if tweet == '─遺伝の世界とミームの世界の対応表─'
       @client.update_with_media(tweet, open('sample1.png'))
     else
       update(@client, tweet)
