@@ -39,7 +39,12 @@ class Tweet
     @text = @text.flat_map{ |t| check_limit(t) }
     index = @text.index(@last_tweet)
     index = @random.rand(@text.size) unless index
-    update(@client, @text[(index + 1) % @text.size])
+    tweet = @text[(index + 1) % @text.size]
+    if tweet == '遺伝の世界とミームの世界の対応表'
+      @client.update_with_media(tweet, open('sample1.png'))
+    else
+      update(@client, tweet)
+    end
   end
 
   # 形態素解析して作文する
