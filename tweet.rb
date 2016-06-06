@@ -7,6 +7,9 @@ TWEET_LIMIT = 140
 # テキストの取捨選択
 SENTENCE_NO = [1-1..-1]
 
+WITH_MEDIA = ['─遺伝の世界とミームの世界の対応表─',
+              'プロダクトデザイナー山中俊治氏の作品Ephyraは、極めて伸縮性の高いテキスタイルのロボット。Ephyraの触手は外界の環境を検知すると接触するかしないかという絶妙なタイミングで引っ込んでしまう。この動作はプログラムに従って動作しているにすぎないが、不思議と生命を感じさせる。']
+
 class Tweet
   def initialize
     raw_text = File.open('sentences.txt').read.split("\n")
@@ -40,10 +43,12 @@ class Tweet
     index = @text.index(@last_tweet)
     index = @random.rand(@text.size) unless index
     tweet = @text[(index + 1) % @text.size]
-    if tweet == '─遺伝の世界とミームの世界の対応表─'
-      @client.update_with_media(tweet, open('sample1.png'))
-    elsif tweet == 'プロダクトデザイナー山中俊治氏の作品Ephyraは、極めて伸縮性の高いテキスタイルのロボット。Ephyraの触手は外界の環境を検知すると接触するかしないかという絶妙なタイミングで引っ込んでしまう。この動作はプログラムに従って動作しているにすぎないが、不思議と生命を感じさせる。'
-      @client.update_with_media(tweet, open('sample2.png'))
+    if WITH_MEDIA.include?(tweet)
+      begin
+        @client.update_with_media(tweet, open('sample3.jpg'))
+      rescue => e
+        nil
+      end
     else
       update(@client, tweet)
     end
