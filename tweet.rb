@@ -14,13 +14,7 @@ MEDIA = ['gene_meme.png', 'ephyra.png']
 class Tweet
   def initialize
     raw_text = File.open('sentences.txt').read.split("\n")
-    # テキストの整形
-    raw_text.each do |t|
-      while t.include?('（') && t.include?('）')
-        t.gsub!(/（.[^（）]*?）/, '')
-      end
-    end
-    # テキストの取捨選択
+
     @text = []
     SENTENCE_NO.each do |i|
       @text += raw_text[i]
