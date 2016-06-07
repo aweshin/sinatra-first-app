@@ -46,7 +46,7 @@ class Tweet
     tweet = @text[(index + 1) % @text.size]
     if m_index = WITH_MEDIA.index(tweet)
       begin
-        @client.update_with_media(tweet, './photo/' + MEDIA[m_index])
+        @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
       rescue  => e
         STDERR.puts "[EXCEPTION] " + e.to_s
         exit 1
