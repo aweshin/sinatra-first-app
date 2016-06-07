@@ -5,7 +5,7 @@ require 'natto'
 #文字数制限１４０字
 TWEET_LIMIT = 140
 # テキストの取捨選択
-SENTENCE_NO = [1-1..138-1]
+SENTENCE_NO = [1-1..-1]
 
 WITH_MEDIA = ['─遺伝の世界とミームの世界の対応表─',
               'プロダクトデザイナー山中俊治氏の作品Ephyraは、極めて伸縮性の高いテキスタイルのロボット。Ephyraの触手は外界の環境を検知すると接触するかしないかという絶妙なタイミングで引っ込んでしまう。この動作はプログラムに従って動作しているにすぎないが、不思議と生命を感じさせる。']
@@ -16,7 +16,7 @@ class Tweet
     raw_text = File.open('sentences.txt').read.split("\n")
     # テキストの整形
     raw_text.each do |t|
-      while t.include?('（') || t.include?('）')
+      while t.include?('（') && t.include?('）')
         t.gsub!(/（.[^（）]*?）/, '')
       end
     end
