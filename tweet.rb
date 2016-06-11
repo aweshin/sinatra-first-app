@@ -36,7 +36,7 @@ class Tweet
 
   def normal_tweet
     @text = @text.flat_map{ |t| check_limit(t) }
-    index = @text.index(@last_tweet)
+    index = @text.index(@last_tweet[0, @last_tweet.rindex(/。|！|？|──/) + 1])
     index = @random.rand(@text.size) unless index
     tweet = @text[(index + 1) % @text.size]
     if m_index = WITH_MEDIA.index(tweet)
