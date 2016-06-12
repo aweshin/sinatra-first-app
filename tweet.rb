@@ -12,11 +12,11 @@ INTERVAL = 12
 SENTENCE_NO = [10..15, 32..42, 44..45, 62..68, 106..106, 112..117, 139..-1]
 # 写真ツイート
 WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
-              'プロダクトデザイナー山中俊治氏の作品Ephyra',
+              'Wingsuits',
               '『意味のメカニズム』のなかで荒川が複数回使用しているものに次のような作品がある。',
               '奈義町の山並みを背景として、突如斜めになった巨大な円筒が出現する。',
               'この巨大な円筒形のなかに龍安寺の庭園が射影され造形されている。']
-MEDIA = ['gene_meme.png', 'ephyra.png', 'arakawa1.png', 'nagi1.png', 'nagi2.png']
+MEDIA = ['gene_meme.png', 'wingsuits.png', 'arakawa1.png', 'nagi1.png', 'nagi2.png']
 
 class Tweet
   def initialize
