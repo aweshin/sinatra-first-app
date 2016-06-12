@@ -6,12 +6,12 @@ require 'natto'
 TWEET_LIMIT = 140
 MEDIA_URL_LENGTH = 24
 # テキストの取捨選択
-SENTENCE_NO = [1-1..-1]
+SENTENCE_NO = [10..15, 32..42, 44..45, 62..68, 106..106, 112..117, 139..-1]
 
-WITH_MEDIA = ['─遺伝の世界とミームの世界の対応表─',
-              'プロダクトデザイナー山中俊治氏の作品Ephyraは、極めて伸縮性の高いテキスタイルのロボット。Ephyraの触手は外界の環境を検知すると接触するかしないかという絶妙なタイミングで引っ込んでしまう。この動作はプログラムに従って動作しているにすぎないが、不思議と生命を感じさせる。',
+WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
+              'プロダクトデザイナー山中俊治氏の作品Ephyra',
               '『意味のメカニズム』のなかで荒川が複数回使用しているものに次のような作品がある。',
-              'この自明となっていた自己の境界そのものを再度作りかえる場を形成したのが、「奈義の龍安寺・建築的身体」である。奈義町の山並みを背景として、突如斜めになった巨大な円筒が出現する。磯崎新の設計で、概観は建築物として環境の新たな再配置を実行している。',
+              '奈義町の山並みを背景として、突如斜めになった巨大な円筒が出現する。',
               'この巨大な円筒形のなかに龍安寺の庭園が射影され造形されている。']
 MEDIA = ['gene_meme.png', 'ephyra.png', 'arakawa1.png', 'nagi1.png', 'nagi2.png']
 
@@ -40,21 +40,27 @@ class Tweet
   def normal_tweet
     @text = @text.flat_map{ |t| check_limit(t) }
     # メディアツイート分を削除
-    @last_tweet = @last_tweet[0, @last_tweet.rindex(/。|！|？|──/) + 1]
-    # メディアツイートで分割ツイートした場合を配慮
-    index = @text.map{ |t|
-              start = [t.length - @last_tweet.length, 0].max
-              t[start..-1]
-            }.index(@last_tweet)
+    @last_tweet = @last_tweet[0, @last_tweet.rindex(/。|！|？|─/) + 1]
+    index = -1
+    if @last_tweet[-1] == '─'
+      # テーマをランダムに決める
+      index = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact.shuffle[0]
+    else
+      # メディアツイートで分割ツイートした場合を配慮
+      index = @text.map{ |t|
+                start = [t.length - @last_tweet.length, 0].max
+                t[start..-1]
+              }.index(@last_tweet)
+    end
     begin
       tweet = @text[(index + 1) % @text.size]
-      if m_index = WITH_MEDIA.index(tweet)
+      if m_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
         if tweet.length <= TWEET_LIMIT - MEDIA_URL_LENGTH
           @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
         else # 分割ツイート
           text = ''
           while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
-            text += tweet.slice!(0, tweet.index(/。|！|？|──/) + 1)
+            text += tweet.slice!(0, tweet.index(/。|！|？/) + 1)
           end
           update(@client, text)
           @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
