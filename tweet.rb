@@ -4,10 +4,13 @@ require 'natto'
 
 #文字数制限１４０字
 TWEET_LIMIT = 140
+# 写真ツイートの短縮URL
 MEDIA_URL_LENGTH = 24
+# 重複ツイートのupload間隔
+INTERVAL = 12
 # テキストの取捨選択
 SENTENCE_NO = [10..15, 32..42, 44..45, 62..68, 106..106, 112..117, 139..-1]
-
+# 写真ツイート
 WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'プロダクトデザイナー山中俊治氏の作品Ephyra',
               '『意味のメカニズム』のなかで荒川が複数回使用しているものに次のような作品がある。',
@@ -41,13 +44,11 @@ class Tweet
     @text = @text.flat_map{ |t| check_limit(t) }
     # メディアツイート分を削除
     @last_tweet = @last_tweet[0, @last_tweet.rindex(/。|！|？|─/) + 1]
-    index = -1
+    # メディアツイートで分割ツイートした場合を配慮
+    index = @text.index{ |t| t.include?(@last_tweet) }
     if @last_tweet[-1] == '─'
       # テーマをランダムに決める
-      index = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact.shuffle[0]
-    else
-      # メディアツイートで分割ツイートした場合を配慮
-      index = @text.index{ |t| t.include?(@last_tweet) }
+      index = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact.shuffle.find{ |i| (index - i).abs >= INTERVAL }
     end
     begin
       tweet = @text[(index + 1) % @text.size]
