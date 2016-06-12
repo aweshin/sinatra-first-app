@@ -4,6 +4,7 @@ require 'natto'
 
 #文字数制限１４０字
 TWEET_LIMIT = 140
+MEDIA_URL_LENGTH = 24
 # テキストの取捨選択
 SENTENCE_NO = [1-1..-1]
 
@@ -38,16 +39,17 @@ class Tweet
 
   def normal_tweet
     @text = @text.flat_map{ |t| check_limit(t) }
-    index = @text.index(@last_tweet[0, @last_tweet.rindex(/。|！|？|──/) + 1])
+    @last_tweet = @last_tweet[0, @last_tweet.rindex(/。|！|？|──/) + 1]
+    index = @text.map{ |t| t[t.length - @last_tweet.length..-1] }.index(@last_tweet)
     index = @random.rand(@text.size) unless index
     tweet = @text[(index + 1) % @text.size]
     if m_index = WITH_MEDIA.index(tweet)
       begin
-        if tweet.length <= TWEET_LIMIT - 24
+        if tweet.length <= TWEET_LIMIT - MEDIA_URL_LENGTH
           @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
         else
           text = ''
-          while tweet.length > TWEET_LIMIT - 24
+          while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
             text += tweet.slice!(0, tweet.index(/。|！|？|──/) + 1)
           end
           update(@client, text)
