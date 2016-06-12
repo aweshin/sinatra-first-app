@@ -43,7 +43,16 @@ class Tweet
     tweet = @text[(index + 1) % @text.size]
     if m_index = WITH_MEDIA.index(tweet)
       begin
-        @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
+        if tweet.length <= TWEET_LIMIT - 24
+          @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
+        else
+          text = ''
+          while tweet.length > TWEET_LIMIT - 24
+            text += tweet.slice!(0, tweet.index(/。|！|？|──/) + 1)
+          end
+          update(@client, text)
+          @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
+        end
       rescue  => e
         STDERR.puts "[EXCEPTION] " + e.to_s
         exit 1
