@@ -47,10 +47,7 @@ class Tweet
       index = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact.shuffle[0]
     else
       # メディアツイートで分割ツイートした場合を配慮
-      index = @text.map{ |t|
-                start = [t.length - @last_tweet.length, 0].max
-                t[start..-1]
-              }.index(@last_tweet)
+      index = @text.index{ |t| t.include?(@last_tweet) }
     end
     begin
       tweet = @text[(index + 1) % @text.size]
