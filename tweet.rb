@@ -2,7 +2,7 @@ require 'rubygems'
 require 'twitter'
 require 'natto'
 
-#文字数制限１４０字
+# 文字数制限１４０字
 TWEET_LIMIT = 140
 # 写真ツイートの短縮URL
 MEDIA_URL_LENGTH = 24
@@ -48,7 +48,8 @@ class Tweet
     index = @text.index{ |t| t.include?(@last_tweet) }
     if @last_tweet[-1] == '─'
       # テーマをランダムに決める
-      index = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact.shuffle.find{ |i| (index - i).abs >= INTERVAL }
+      indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact
+      index = indexes.shuffle.find{ |i| (indexes.index(index) + indexes.size - indexes.index(i)) % indexes.size != 1 }
     end
     begin
       tweet = @text[(index + 1) % @text.size]
