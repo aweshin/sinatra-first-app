@@ -39,15 +39,19 @@ class Tweet
 
   def normal_tweet
     @text = @text.flat_map{ |t| check_limit(t) }
+    # メディアツイート分を削除
     @last_tweet = @last_tweet[0, @last_tweet.rindex(/。|！|？|──/) + 1]
-    index = @text.map{ |t| t[t.length - @last_tweet.length..-1] }.index(@last_tweet)
-    index = @random.rand(@text.size) unless index
-    tweet = @text[(index + 1) % @text.size]
-    if m_index = WITH_MEDIA.index(tweet)
-      begin
+    # メディアツイートで分割ツイートした場合を配慮
+    index = @text.map{ |t|
+              start = [t.length - @last_tweet.length, 0].max
+              t[start..-1]
+            }.index(@last_tweet)
+    begin
+      tweet = @text[(index + 1) % @text.size]
+      if m_index = WITH_MEDIA.index(tweet)
         if tweet.length <= TWEET_LIMIT - MEDIA_URL_LENGTH
           @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
-        else
+        else # 分割ツイート
           text = ''
           while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
             text += tweet.slice!(0, tweet.index(/。|！|？|──/) + 1)
@@ -55,12 +59,12 @@ class Tweet
           update(@client, text)
           @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
         end
-      rescue  => e
-        STDERR.puts "[EXCEPTION] " + e.to_s
-        exit 1
+      else
+        update(@client, tweet)
       end
-    else
-      update(@client, tweet)
+    rescue  => e
+      STDERR.puts "[EXCEPTION] " + e.to_s
+      exit 1
     end
   end
 
