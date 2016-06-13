@@ -41,17 +41,7 @@ class Tweet
   end
 
   def normal_tweet
-    @text = @text.flat_map{ |t| check_limit(t) }
-    @text = join_text(@text)
-    # メディアツイート分を削除
-    @last_tweet = @last_tweet[0, @last_tweet.rindex(/。|！|？|─/) + 1]
-    # メディアツイートで分割ツイートした場合を配慮
-    index = @text.index{ |t| t.include?(@last_tweet) }
-    if @last_tweet[-1] == '─'
-      # テーマをランダムに決める
-      indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact
-      index = indexes.shuffle.find{ |i| (indexes.index(index) + indexes.size - indexes.index(i)) % indexes.size != 1 }
-    end
+    index = init
     begin
       tweet = @text[(index + 1) % @text.size]
       if m_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
@@ -89,6 +79,21 @@ class Tweet
 
   private
 
+  def init
+    @text = @text.flat_map{ |t| check_limit(t) }
+    @text = join_text(@text)
+    # メディアツイート分を削除
+    @last_tweet = @last_tweet.gsub(/http.+/, '')
+    # メディアツイートで分割ツイートした場合を配慮
+    index = @text.index{ |t| t.include?(@last_tweet) }
+    if @last_tweet[-1] == '─'
+      # テーマをランダムに決める
+      indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact
+      index = indexes.shuffle.find{ |i| (indexes.index(index) + indexes.size - indexes.index(i)) % indexes.size != 1 }
+    end
+    index
+  end
+
   # TWEET_LIMIT以内に1文以上がおさまるか
   def check_limit(text)
     ret = []
@@ -108,7 +113,7 @@ class Tweet
   def join_text(text)
     ret = [text.shift]
     text.each do |t|
-      if ret[-1].size + t.size <= TWEET_LIMIT && ret[-1][-1] != '─'
+      if ret[-1].size + t.size <= TWEET_LIMIT && !ret[-1].index(/。|！|？|─/)
         ret[-1] = [ret[-1], t].join("\n")
       else
         ret << t
