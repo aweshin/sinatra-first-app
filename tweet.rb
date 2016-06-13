@@ -42,6 +42,7 @@ class Tweet
 
   def normal_tweet
     @text = @text.flat_map{ |t| check_limit(t) }
+    @text = join_text(@text)
     # メディアツイート分を削除
     @last_tweet = @last_tweet[0, @last_tweet.rindex(/。|！|？|─/) + 1]
     # メディアツイートで分割ツイートした場合を配慮
@@ -93,9 +94,27 @@ class Tweet
     ret = []
     loop do
       index = text[0,TWEET_LIMIT].rindex(/。|！|？|──/)
-      return ret unless index
+      unless index
+        if ret.empty?
+          return text.gsub(/（.+?）/, '')
+        else
+          return ret
+        end
+      end
       ret << text.slice!(0, index + 1)
     end
+  end
+
+  def join_text(text)
+    ret = [text.shift]
+    text.each do |t|
+      if ret[-1].size + t.size <= TWEET_LIMIT && ret[-1][-1] != '─'
+        ret[-1] = [ret[-1], t].join("\n")
+      else
+        ret << t
+      end
+    end
+    ret
   end
 
   def update(client, tweet)
