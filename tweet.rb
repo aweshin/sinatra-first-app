@@ -83,8 +83,7 @@ class Tweet
     @text = @text.flat_map{ |t| check_limit(t) }
     @text = join_text(@text)
     # メディアツイート分を削除
-    @last_tweet = @last_tweet.gsub(/http.+/, '')
-    # メディアツイートで分割ツイートした場合を配慮
+    @last_tweet = @last_tweet.gsub(/\s*http.+/, '')
     index = @text.index{ |t| t.include?(@last_tweet) }
     if @last_tweet[-1] == '─'
       # テーマをランダムに決める
