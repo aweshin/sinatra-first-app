@@ -198,7 +198,7 @@ class Tweet
       tweets = check_limit(text)
       if tweets.instance_of?(Array) &&
         (ret = tweets[@random.rand(tweets.size)]).length <= TWEET_LIMIT - 7
-        return ret + '(σ-д・´)'
+        return ret + ['(σ-д・´)', 'σ(ﾟｰ^*)', '(｀･∧･´)', '(・ω・`)'].sample
       end
     end
   end
