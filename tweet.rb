@@ -69,7 +69,7 @@ class Tweet
   # 形態素解析して作文する
   def random_tweet_using_mecab
     @text.shuffle!
-    make_dic(@text)
+    make_dic
     tweet = choice_sentence
     update(tweet)
   end
@@ -89,6 +89,7 @@ class Tweet
       tw = tw.text.gsub(/\shttp.+/, '')
       @text.index{ |t| t.include?(tw) }
     }
+    return unless indexes.any?
     index = indexes[0]
     unless index
       unless indexes[0,4].any?
@@ -168,7 +169,7 @@ class Tweet
   end
 
   # マルコフ連鎖用辞書の作成
-  def make_dic(items)
+  def make_dic
     @text.each do |t|
       t.gsub!(/「|」/, '')
     end
