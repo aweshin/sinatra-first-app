@@ -48,10 +48,10 @@ class Tweet
     index = tweet_index
     tweet = @text[(index + 1) % @text.size]
     if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
+      text, tweet = split_tweet(tweet)
       # 写真ツイート
-      if limit_exceed(tweet)
+      unless text.empty?
         # 分割ツイート
-        text, tweet = split_tweet(tweet)
         update(text)
       end
       update(tweet, open('./photo/' + MEDIA[media_index]))
@@ -127,13 +127,9 @@ class Tweet
   end
 
   # 写真ツイートの文字数分減った場合、文字数制限が厳しくなる。
-  def limit_exceed(tweet)
-    tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
-  end
-
   def split_tweet(tweet)
     ret = ''
-    while limit_exceed(tweet)
+    while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
       ret += tweet.slice!(0, tweet.index(/。|！|？/) + 1)
     end
     [ret, tweet]
