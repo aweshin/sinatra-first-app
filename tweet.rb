@@ -46,22 +46,17 @@ class Tweet
 
   def normal_tweet
     index = tweet_index
-    begin
-      tweet = @text[(index + 1) % @text.size]
-      if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
-        # 写真ツイート
-        if limit_exceed(tweet)
-          # 分割ツイート
-          text, tweet = split_tweet(tweet)
-          update(@client, text)
-        end
-        @client.update_with_media(tweet, open('./photo/' + MEDIA[media_index]))
-      else
-        update(@client, tweet)
+    tweet = @text[(index + 1) % @text.size]
+    if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
+      # 写真ツイート
+      if limit_exceed(tweet)
+        # 分割ツイート
+        text, tweet = split_tweet(tweet)
+        update(text)
       end
-    rescue  => e
-      STDERR.puts "[EXCEPTION] " + e.to_s
-      exit 1
+      update(tweet, open('./photo/' + MEDIA[media_index]))
+    else
+      update(tweet)
     end
   end
 
@@ -70,7 +65,7 @@ class Tweet
     @text.shuffle!
     make_dic(@text)
     tweet = choice_sentence
-    update(@client, tweet)
+    update(tweet)
   end
 
   def tweet_hybrid
@@ -144,10 +139,13 @@ class Tweet
     [ret, tweet]
   end
 
-  def update(client, tweet)
-    return nil unless tweet
+  def update(tweet, media = nil)
     begin
-      client.update(tweet)
+      if media
+        @client.update_with_media(tweet, media)
+      else
+        @client.update(tweet)
+      end
     rescue => e
       STDERR.puts "[EXCEPTION] " + e.to_s
       exit 1
