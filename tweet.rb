@@ -123,9 +123,10 @@ class Tweet
   end
 
   def randomize_theme(index)
-    indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact.shuffle
+    indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact
     total = indexes.size
-    indexes.find{ |i|
+    # また同じテーマになるのを防ぐ
+    indexes.shuffle.find{ |i|
       (indexes.index(index) + total - indexes.index(i)) % total != 1
     }
   end
