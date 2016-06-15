@@ -16,14 +16,14 @@ WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               '『意味のメカニズム』のなかで荒川が複数回使用しているものに',
               '奈義町の山並みを背景として、突如斜めになった巨大な円筒が出現する。',
               'この巨大な円筒形のなかに龍安寺の庭園が射影され造形されている。',
-              'タンジブル・ユーザ・インターフェース',
-              'サブリメイト']
+              'music bottles',
+              'sublimate']
 MEDIA = ['gene_meme.png',
          'wingsuits.png',
          'arakawa_1.png',
          'nagi_1.png',
          'nagi_2.png',
-         'tangible_1.png',
+         'musicBottles.png',
          'sublimate.png']
 
 class Tweet
@@ -150,7 +150,7 @@ class Tweet
   def split_tweet(tweet)
     ret = ''
     while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
-      ret += tweet.slice!(0, tweet.index(/。|！|？/) + 1)
+      ret += tweet.slice!(0, tweet.index(/。|！|？|──/) + 1)
     end
     [ret, tweet]
   end
