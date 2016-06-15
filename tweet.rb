@@ -93,27 +93,6 @@ class Tweet
     index
   end
 
-  def randomize_theme(index)
-    indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact.shuffle
-    total = indexes.size
-    indexes.find{ |i|
-      (indexes.index(index) + total - indexes.index(i)) % total != 1
-    }
-  end
-
-  # 写真ツイートの文字数分減った場合、文字数制限が厳しくなる。
-  def limit_exceed(tweet)
-    tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
-  end
-
-  def split_tweet(tweet)
-    ret = ''
-    while limit_exceed(tweet)
-      ret += tweet.slice!(0, tweet.index(/。|！|？/) + 1)
-    end
-    [ret, tweet]
-  end
-
   # TWEET_LIMIT以内に1文以上がおさまるか
   def check_limit(text)
     ret = []
@@ -141,6 +120,27 @@ class Tweet
       end
     end
     ret
+  end
+
+  def randomize_theme(index)
+    indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact.shuffle
+    total = indexes.size
+    indexes.find{ |i|
+      (indexes.index(index) + total - indexes.index(i)) % total != 1
+    }
+  end
+
+  # 写真ツイートの文字数分減った場合、文字数制限が厳しくなる。
+  def limit_exceed(tweet)
+    tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
+  end
+
+  def split_tweet(tweet)
+    ret = ''
+    while limit_exceed(tweet)
+      ret += tweet.slice!(0, tweet.index(/。|！|？/) + 1)
+    end
+    [ret, tweet]
   end
 
   def update(client, tweet)
