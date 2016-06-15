@@ -13,10 +13,14 @@ SENTENCE_NO = [10..15, 32..42, 44..45, 62..68, 106..106, 112..117, 139..-1]
 # 写真ツイート
 WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'Wingsuits',
-              '『意味のメカニズム』のなかで荒川が複数回使用しているものに次のような作品がある。',
+              '『意味のメカニズム』のなかで荒川が複数回使用しているものに',
               '奈義町の山並みを背景として、突如斜めになった巨大な円筒が出現する。',
               'この巨大な円筒形のなかに龍安寺の庭園が射影され造形されている。']
-MEDIA = ['gene_meme.png', 'wingsuits.png', 'arakawa1.png', 'nagi1.png', 'nagi2.png']
+MEDIA = ['gene_meme.png',
+         'wingsuits.png',
+         'arakawa_1.png',
+         'nagi_1.png',
+         'nagi_2.png']
 
 class Tweet
   def initialize
@@ -41,20 +45,17 @@ class Tweet
   end
 
   def normal_tweet
-    index = init
+    index = tweet_index
     begin
       tweet = @text[(index + 1) % @text.size]
-      if m_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
-        if tweet.length <= TWEET_LIMIT - MEDIA_URL_LENGTH
-          @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
-        else # 分割ツイート
-          text = ''
-          while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
-            text += tweet.slice!(0, tweet.index(/。|！|？/) + 1)
-          end
+      if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
+        # 写真ツイート
+        if limit_exceed(tweet)
+          # 分割ツイート
+          text, tweet = split_tweet(tweet)
           update(@client, text)
-          @client.update_with_media(tweet, open('./photo/' + MEDIA[m_index]))
         end
+        @client.update_with_media(tweet, open('./photo/' + MEDIA[media_index]))
       else
         update(@client, tweet)
       end
@@ -79,7 +80,7 @@ class Tweet
 
   private
 
-  def init
+  def tweet_index
     @text = @text.flat_map{ |t| check_limit(t) }
     @text = join_text(@text)
     # メディアツイート分を削除
@@ -87,10 +88,30 @@ class Tweet
     index = @text.index{ |t| t.include?(@last_tweet) }
     if @last_tweet[-1] == '─'
       # テーマをランダムに決める
-      indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact
-      index = indexes.shuffle.find{ |i| (indexes.index(index) + indexes.size - indexes.index(i)) % indexes.size != 1 }
+      index = randomize_theme(index)
     end
     index
+  end
+
+  def randomize_theme(index)
+    indexes = @text.map.with_index{ |t, i| i if t.last == '─' }.compact.shuffle
+    total = indexes.size
+    indexes.find{ |i|
+      (indexes.index(index) + total - indexes.index(i)) % total != 1
+    }
+  end
+
+  # 写真ツイートの文字数分減った場合、文字数制限が厳しくなる。
+  def limit_exceed(tweet)
+    tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
+  end
+
+  def split_tweet(tweet)
+    ret = ''
+    while limit_exceed(tweet)
+      ret += tweet.slice!(0, tweet.index(/。|！|？/) + 1)
+    end
+    [ret, tweet]
   end
 
   # TWEET_LIMIT以内に1文以上がおさまるか
@@ -112,8 +133,8 @@ class Tweet
   def join_text(text)
     ret = [text.shift]
     text.each do |t|
-      if ret[-1].size + t.size <= TWEET_LIMIT && !ret[-1].index(/。|！|？|─/)
-        ret[-1] = [ret[-1], t].join("\n")
+      if ret.last.size + t.size <= TWEET_LIMIT && !ret.last.index(/。|！|？|─/)
+        ret[-1] = [ret.last, t].join("\n")
       else
         ret << t
       end
@@ -124,8 +145,7 @@ class Tweet
   def update(client, tweet)
     return nil unless tweet
     begin
-      # tweet = (tweet.length > TWEET_LIMIT) ? tweet[0,TWEET_LIMIT] : tweet
-      client.update(tweet.chomp)
+      client.update(tweet)
     rescue => e
       STDERR.puts "[EXCEPTION] " + e.to_s
       exit 1
@@ -168,16 +188,16 @@ class Tweet
   def connect
     # スタートは begin,beginから
     prefix = ['BEGIN','BEGIN']
-    ss = ''
+    ret = ''
     loop do
       n = @dic[prefix].length
       prefix = [prefix[1] , @dic[prefix][@random.rand(n)]]
-      ss += prefix[0] if prefix[0] != 'BEGIN'
+      ret += prefix[0] if prefix[0] != 'BEGIN'
       if @dic[prefix].last == 'END'
-        ss += prefix[1]
+        ret += prefix[1]
         break
       end
     end
-    ss
+    ret
   end
 end
