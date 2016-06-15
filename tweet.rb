@@ -85,12 +85,15 @@ class Tweet
     @text = @text.flat_map{ |t| check_limit(t) }
     @text = join_text(@text)
     # メディアツイート分を削除
-    @last_tweet = @last_tweet.gsub(/\s*http.+/, '')
-    index = @text.index{ |t| t.include?(@last_tweet) }
+    indexes = @last_5_tweets.map{ |tw|
+      tw = tw.gsub(/\s*http.+/, '')
+      @text.index{ |t| t.include?(tw.text) }
+    }
+    index = indexes[0]
     unless index
-      if @last_5_tweets[0,4].all?{ |tw| !@text.index{ |t| t.include?(tw.text) } }
+      unless indexes[0,4].any?
         # テーマをランダムに決める
-        index = randomize_theme(index)
+        index = randomize_theme(indexes[4])
       else
         random_tweet_using_mecab
         return
