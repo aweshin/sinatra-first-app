@@ -94,7 +94,7 @@ class Tweet
   end
 
   def randomize_theme(index)
-    indexes = @text.map.with_index{ |t, i| i if t.last == '─' }.compact.shuffle
+    indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact.shuffle
     total = indexes.size
     indexes.find{ |i|
       (indexes.index(index) + total - indexes.index(i)) % total != 1
@@ -133,7 +133,8 @@ class Tweet
   def join_text(text)
     ret = [text.shift]
     text.each do |t|
-      if ret.last.size + t.size <= TWEET_LIMIT && !ret.last.index(/。|！|？|─/)
+      if ret.last.size + t.size <= TWEET_LIMIT &&
+        !(ret.last[-1].match(/。|！|？|─/))
         ret[-1] = [ret.last, t].join("\n")
       else
         ret << t
