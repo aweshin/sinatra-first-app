@@ -178,9 +178,11 @@ class Tweet
   # 辞書を元に作文を行う。文字数制限を加味する。
   def choice_sentence
     loop do
-      tweet = connect
-      if (ret = check_limit(tweet)).size != 0
-        return ret[@random.rand(ret.size)]
+      text = connect
+      tweets = check_limit(text)
+      if tweets.instance_of?(Array) &&
+        (ret = tweets[@random.rand(tweets.size)]).length <= TWEET_LIMIT - 7
+        return ret + '(σ-д・´)'
       end
     end
   end
