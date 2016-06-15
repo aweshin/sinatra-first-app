@@ -45,22 +45,24 @@ class Tweet
     # ランダムインスタンスの生成
     @random = Random.new
     #最新のツイートを取得
-    @last_tweet = @client.home_timeline(:count => 1)[0].text
+    @last_5_tweets = @client.home_timeline(:count => 5)
+    @last_tweet = @last_5_tweets[0].text
   end
 
   def normal_tweet
-    index = tweet_index
-    tweet = @text[(index + 1) % @text.size]
-    if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
-      # 写真ツイート
-      text, tweet = split_tweet(tweet)
-      unless text.empty?
-        # 分割ツイート
-        update(text)
+    if index = tweet_index
+      tweet = @text[(index + 1) % @text.size]
+      if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
+        # 写真ツイート
+        text, tweet = split_tweet(tweet)
+        unless text.empty?
+          # 分割ツイート
+          update(text)
+        end
+        update(tweet, open('./photo/' + MEDIA[media_index]))
+      else
+        update(tweet)
       end
-      update(tweet, open('./photo/' + MEDIA[media_index]))
-    else
-      update(tweet)
     end
   end
 
@@ -85,9 +87,19 @@ class Tweet
     # メディアツイート分を削除
     @last_tweet = @last_tweet.gsub(/\s*http.+/, '')
     index = @text.index{ |t| t.include?(@last_tweet) }
-    if @last_tweet[-1] == '─'
-      # テーマをランダムに決める
-      index = randomize_theme(index)
+    unless index
+      if @last_5_tweets[0,4].all?{ |tw| !@text.index{ |t| t.include?(tw.text) } }
+        # テーマをランダムに決める
+        index = randomize_theme(index)
+      else
+        random_tweet_using_mecab
+        return
+      end
+    else
+      if @last_tweet[-1] == '─'
+        random_tweet_using_mecab
+        return
+      end
     end
     index
   end
