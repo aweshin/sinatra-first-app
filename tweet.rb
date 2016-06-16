@@ -86,7 +86,7 @@ class Tweet
     @text = join_text(@text)
     # メディアツイート分を削除
     indexes = @last_5_tweets.map{ |tw|
-      tw = tw.text.gsub(/\s?https.+?──|\s?https.+─?/, '')
+      tw = delete_https(tw.text)
       @text.index{ |t| t.include?(tw) }
     }
     return unless indexes.any?
@@ -100,7 +100,7 @@ class Tweet
         return
       end
     else
-      if @last_tweet.gsub(/\s?https.+?──|\s?https.+─?/, '')[-1] == '─'
+      if delete_https(@last_tweet)[-1] == '─'
         random_tweet_using_mecab
         return
       end
@@ -137,8 +137,14 @@ class Tweet
     ret
   end
 
+  def delete_https(tweet)
+    tweet.gsub(/\s?https.+?──|\s?https.+─?/, '')
+  end
+
   def randomize_theme(index)
-    indexes = @text.map.with_index{ |t, i| i if t[-1] == '─' }.compact
+    indexes = @text.map.with_index{ |t, i|
+      i if delete_https(t)[-1] == '─' }.compact
+
     total = indexes.size
     # また同じテーマになるのを防ぐ
     indexes.shuffle.find{ |i|
