@@ -102,7 +102,7 @@ class Tweet
         return
       end
     else
-      if @last_tweet[-1] == '─'
+      if @last_tweet.gsub(/https.+/, '')[-1] == '─'
         random_tweet_using_mecab
         return
       end
