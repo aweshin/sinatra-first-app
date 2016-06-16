@@ -30,7 +30,7 @@ MEDIA = ['gene_meme.png',
 
 class Tweet
   def initialize
-    raw_text = File.open('sentences.txt').read.split("\n")
+    raw_text = File.open('./sentences.txt').read.split("\n")
 
     @text = []
     SENTENCE_NO.each do |i|
@@ -57,10 +57,8 @@ class Tweet
       if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
         # 写真ツイート
         text, tweet = split_tweet(tweet)
-        unless text.empty?
-          # 分割ツイート
-          update(text)
-        end
+        # 分割ツイート
+        update(text) unless text.empty?
         update(tweet, open('./photo/' + MEDIA[media_index]))
       else
         update(tweet)
@@ -152,8 +150,9 @@ class Tweet
   def split_tweet(tweet)
     ret = ''
     while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
-      ret += tweet.slice!(0, tweet.index(/。|！|？|──/) + 1)
+      ret += tweet.slice!(0, tweet.index(/。|！|？|──?/) + 1)
     end
+    tweet = '─' if tweet.empty?
     [ret, tweet]
   end
 
