@@ -17,14 +17,16 @@ WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               '奈義町の山並みを背景として、突如斜めになった巨大な円筒が出現する。',
               'この巨大な円筒形のなかに龍安寺の庭園が射影され造形されている。',
               'music bottles',
-              'sublimate']
+              'sublimate',
+              'フランシス・ベーコン']
 MEDIA = ['gene_meme.png',
          'wingsuits.png',
          'arakawa_1.png',
          'nagi_1.png',
          'nagi_2.png',
          'musicBottles.png',
-         'sublimate.png']
+         'sublimate.png',
+         'bacon.png']
 
 class Tweet
   def initialize
@@ -198,7 +200,7 @@ class Tweet
       tweets = check_limit(text)
       if tweets.instance_of?(Array) &&
         (ret = tweets[@random.rand(tweets.size)]).length <= TWEET_LIMIT - 7
-        return ret + ['(σ-д・´)', 'σ(ﾟｰ^*)', '(｀･∧･´)', '(・ω・`)'].sample
+        return ret + ['(´ー｀)ﾌｯ', '(´-｀)ン?', '(ﾟДﾟ)は?', '（日本語でおk'].sample
       end
     end
   end
