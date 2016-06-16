@@ -88,7 +88,7 @@ class Tweet
     @text = join_text(@text)
     # メディアツイート分を削除
     indexes = @last_5_tweets.map{ |tw|
-      tw = tw.text.gsub(/\shttp.+/, '')
+      tw = tw.text.gsub(/https.+/, '')
       @text.index{ |t| t.include?(tw) }
     }
     return unless indexes.any?
