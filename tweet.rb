@@ -88,7 +88,7 @@ class Tweet
     @text = join_text(@text)
     # メディアツイート分を削除
     indexes = @last_5_tweets.map{ |tw|
-      tw = tw.text.gsub(/https.+/, '')
+      tw = tw.text.gsub(/https.+?──|https.+/, '')
       @text.index{ |t| t.include?(tw) }
     }
     return unless indexes.any?
@@ -102,7 +102,7 @@ class Tweet
         return
       end
     else
-      if @last_tweet.gsub(/https.+?——/, '')[-1] == '─'
+      if @last_tweet.gsub(/https.+?──/, '')[-1] == '─'
         random_tweet_using_mecab
         return
       end
