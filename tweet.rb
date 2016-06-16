@@ -102,7 +102,7 @@ class Tweet
         return
       end
     else
-      if @last_tweet.gsub(/https.+/, '')[-1] == '─'
+      if @last_tweet.gsub(/https.+?——/, '')[-1] == '─'
         random_tweet_using_mecab
         return
       end
@@ -200,7 +200,7 @@ class Tweet
       tweets = check_limit(text)
       if tweets.instance_of?(Array) &&
         (ret = tweets[@random.rand(tweets.size)]).length <= TWEET_LIMIT - 7
-        return ret + ['(´ー｀)ﾌｯ', '(´-｀)ン?', '(ﾟДﾟ)は?', '（日本語でおk'].sample
+        return ret + ['(´ー｀)ﾌｯ', '(´-｀)ン?', '(ﾟДﾟ)は?', '←日本語でおk'].sample
       end
     end
   end
