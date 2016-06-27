@@ -47,8 +47,8 @@ class Tweet
     # ランダムインスタンスの生成
     @random = Random.new
     #最新のツイートを取得
-    @last_5_tweets = @client.home_timeline(:count => 5)
-    @last_tweet = @last_5_tweets[0].text
+    @last_4_tweets = @client.home_timeline(:count => 4)
+    @last_tweet = @last_4_tweets[0].text
   end
 
   def normal_tweet
@@ -85,16 +85,16 @@ class Tweet
     @text = @text.flat_map{ |t| check_limit(t) }
     @text = join_text(@text)
     # メディアツイート分を削除
-    indexes = @last_5_tweets.map{ |tw|
+    indexes = @last_4_tweets.map{ |tw|
       tw = delete_https(tw.text)
       @text.index{ |t| t.include?(tw) }
     }
     return unless indexes.any?
     index = indexes[0]
     unless index
-      unless indexes[0,4].any?
+      unless indexes[0,3].any?
         # テーマをランダムに決める
-        index = randomize_theme(indexes[4])
+        index = randomize_theme(indexes[3])
       else
         random_tweet_using_mecab
         return
@@ -204,8 +204,9 @@ class Tweet
       text = connect
       tweets = check_limit(text)
       if tweets.instance_of?(Array) &&
-        (ret = tweets[@random.rand(tweets.size)]).length <= TWEET_LIMIT - 7
-        return ret + ['(´ー｀)ﾌｯ', '(´-｀)ン?', '(ﾟДﾟ)は?', '←日本語でおk'].sample
+        (ret = tweets[@random.rand(tweets.size)]).length <= TWEET_LIMIT - 8
+        return ret +
+          ['ｵｩ…', 'ン?', 'なんてね。', '（意味不。）', '？？？', 'とか言ってみる', 'なるほどわからん' ].sample
       end
     end
   end
