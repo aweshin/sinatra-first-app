@@ -10,6 +10,8 @@ MEDIA_URL_LENGTH = 24
 INTERVAL = 12
 # テキストの取捨選択
 SENTENCE_NO = [10..15, 32..42, 44..45, 62..68, 99..99, 106..106, 112..117, 139..-1]
+# mecabツイートの語尾
+MECAB_TWEET = ['ｵｩ…', 'ン?', 'なんてね。', '（意味不。）', '？？？', 'とか言ってみる', 'なるほどわからん' ]
 # 写真ツイート
 WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'Wingsuits',
@@ -138,7 +140,7 @@ class Tweet
   end
 
   def delete_https(tweet)
-    tweet.gsub(/\s?https.+?──|\s?https.+─?/, '')
+    tweet.gsub(/\s?https?.+?──|\s?https?.+─?/, '')
   end
 
   def randomize_theme(index)
@@ -204,9 +206,9 @@ class Tweet
       text = connect
       tweets = check_limit(text)
       if tweets.instance_of?(Array) &&
-        (ret = tweets[@random.rand(tweets.size)]).length <= TWEET_LIMIT - 8
-        return ret +
-          ['ｵｩ…', 'ン?', 'なんてね。', '（意味不。）', '？？？', 'とか言ってみる', 'なるほどわからん' ].sample
+        (ret = tweets[@random.rand(tweets.size)]).length <=
+        TWEET_LIMIT - MECAB_TWEET.map{ |t| t.length }.max
+        return ret + MECAB_TWEET.sample
       end
     end
   end
