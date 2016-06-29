@@ -20,7 +20,8 @@ WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'この巨大な円筒形のなかに龍安寺の庭園が射影され造形されている。',
               'music bottles',
               'sublimate',
-              'フランシス・ベーコン']
+              'フランシス・ベーコン',
+              '反転図形から反転図形']
 MEDIA = ['gene_meme.png',
          'wingsuits.png',
          'arakawa_1.png',
@@ -28,7 +29,8 @@ MEDIA = ['gene_meme.png',
          'nagi_2.png',
          'musicBottles.png',
          'sublimate.png',
-         'bacon.png']
+         'bacon.png',
+         'reversible_fig.gif']
 
 class Tweet
   def initialize
