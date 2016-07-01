@@ -63,7 +63,7 @@ class Tweet
         text, tweet = split_tweet(tweet)
         # 分割ツイート
         update(text) unless text.empty?
-        update(tweet, open('./photo/' + MEDIA[media_index]))
+        update(tweet, open('./media/' + MEDIA[media_index]))
       else
         update(tweet)
       end
@@ -148,7 +148,8 @@ class Tweet
   def randomize_theme(index)
     indexes = @text.map.with_index{ |t, i|
       i if delete_https(t)[-1] == '─' }.compact
-
+    # 最新ツイート
+    return indexes[-2]
     total = indexes.size
     # また同じテーマになるのを防ぐ
     indexes.shuffle.find{ |i|
