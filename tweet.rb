@@ -11,7 +11,10 @@ INTERVAL = 12
 # テキストの取捨選択
 SENTENCE_NO = [10..15, 32..42, 44..45, 62..68, 99..99, 106..106, 112..117, 139..-1]
 # mecabツイートの語尾
-MECAB_TWEET = ['ｵｩ…', 'ン?', 'なんてね。', '（意味不。）', '？？？', 'とか言ってみる', 'なるほどわからん' ]
+MECAB_TWEET = ['ｵｩ…', 'ン?', 'なんてね。', 'もし仮に。', 'とか言ってみる。', 'なるほどわからん。',
+               'ry', '…という幻覚を見た。', 'コーラ飲む。', '風呂入る。', '富士山登る。',
+               '鼻をほじる。', 'じっと手を見る。', '」と大声で叫ぶ。', 'ちょっと危険。',
+               'そっとささやく。', '15点。']
 # 写真ツイート
 WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'Wingsuits',
@@ -149,7 +152,7 @@ class Tweet
     indexes = @text.map.with_index{ |t, i|
       i if delete_https(t)[-1] == '─' }.compact
     # 最新ツイート
-    return indexes[-2]
+    return indexes[-2] if index != indexes.last
     total = indexes.size
     # また同じテーマになるのを防ぐ
     indexes.shuffle.find{ |i|
