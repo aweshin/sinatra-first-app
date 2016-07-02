@@ -15,7 +15,7 @@ MECAB_TWEET = ['なんてね。', 'とか言ってみる。', 'ふむふむ…',
                '(ry', '経験のパラレルワールド。', 'ちょっとしたファンタジー。',
                'からの経験の立ち上げ。', '…ああ。',
                'じっと手を見る。', 'ことばのカタルシス。', 'ちょっと危険。',
-               'そっとささやく。', '15点。']
+               'そっとささやく。', "#{rand(1..100) ** 2/100}点。"]
 # 写真ツイート
 WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'Wingsuits',
@@ -153,7 +153,7 @@ class Tweet
     indexes = @text.map.with_index{ |t, i|
       i if delete_https(t)[-1] == '─' }.compact
     # 最新ツイート
-    return indexes[-2] if index != indexes.last
+    # return indexes[-2] if index != indexes.last
     total = indexes.size
     # また同じテーマになるのを防ぐ
     indexes.shuffle.find{ |i|
