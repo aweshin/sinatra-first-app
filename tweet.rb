@@ -2,21 +2,21 @@ require 'rubygems'
 require 'twitter'
 require 'natto'
 
-# 文字数制限１４０字
+# 文字数制限140字
 TWEET_LIMIT = 140
-# 写真ツイートの短縮URL
+# メディアツイートの短縮URL
 MEDIA_URL_LENGTH = 24
 # 重複ツイートのupload間隔
 INTERVAL = 12
 # テキストの取捨選択
-SENTENCE_NO = [10..15, 32..42, 44..45, 62..68, 99..99, 106..106, 112..117, 139..-1]
+SENTENCE_NO = [32..42, 44..45, 62..68, 99..99, 106..106, 112..117, 139..-1]
 # mecabツイートの語尾
 MECAB_TWEET = ['なんてね。', 'とか言ってみる。', 'ふむふむ…',
                '(ry', '経験のパラレルワールド。', 'ちょっとしたファンタジー。',
                'からの経験の立ち上げ。', '…ああ。',
                'じっと手を見る。', 'ことばのカタルシス。', 'ちょっと危険。',
-               'そっとささやく。', "#{rand(1..100) ** 2/100}点。"]
-# 写真ツイート
+               'そっとささやく。', "#{(rand(1..100) ** 2) / 100}点。"]
+# メディアツイート
 WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'Wingsuits',
               '『意味のメカニズム』のなかで荒川が複数回使用しているものに',
@@ -54,16 +54,16 @@ class Tweet
     @dic = {}
     # ランダムインスタンスの生成
     @random = Random.new
-    #最新のツイートを取得
-    @last_4_tweets = @client.home_timeline(:count => 4)
-    @last_tweet = @last_4_tweets[0].text
+    # 過去200件のツイートを取得
+    @last_200_tweets = @client.home_timeline(:count => 200)
+    @last_tweet = @last_200_tweets[0].text
   end
 
   def normal_tweet
     if index = tweet_index
       tweet = @text[(index + 1) % @text.size]
       if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
-        # 写真ツイート
+        # メディアツイート
         text, tweet = split_tweet(tweet)
         # 分割ツイート
         update(text) unless text.empty?
@@ -93,7 +93,7 @@ class Tweet
     @text = @text.flat_map{ |t| check_limit(t) }
     @text = join_text(@text)
     # メディアツイート分を削除
-    indexes = @last_4_tweets.map{ |tw|
+    indexes = @last_200_tweets[0,4].map{ |tw|
       tw = delete_https(tw.text)
       @text.index{ |t| t.include?(tw) }
     }
@@ -102,7 +102,7 @@ class Tweet
     unless index
       unless indexes[0,3].any?
         # テーマをランダムに決める
-        index = randomize_theme(indexes[3])
+        index = next_theme(indexes[3])
       else
         random_tweet_using_mecab
         return
@@ -149,19 +149,18 @@ class Tweet
     tweet.gsub(/\s?https?.+?──|\s?https?.+─?/, '')
   end
 
-  def randomize_theme(index)
+  def next_theme(index)
     indexes = @text.map.with_index{ |t, i|
       i if delete_https(t)[-1] == '─' }.compact
-    # 最新ツイート
-    # return indexes[-2] if index != indexes.last
-    total = indexes.size
-    # また同じテーマになるのを防ぐ
-    indexes.shuffle.find{ |i|
-      (indexes.index(index) + total - indexes.index(i)) % total != 1
+    # 最新200件にツイートされていないテーマを選ぶ
+    @last_200_tweets.each{ |tw|
+      tw = delete_https(tw.text)
+      indexes.delete(@text.index{ |t| t.include?(tw) } if tw[-1] == '─')
     }
+    indexes.sample
   end
 
-  # 写真ツイートの文字数分減った場合、文字数制限が厳しくなる。
+  # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
   def split_tweet(tweet)
     ret = ''
     while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
@@ -214,7 +213,7 @@ class Tweet
       tweets = check_limit(text)
       if tweets.instance_of?(Array) &&
         (ret = tweets[@random.rand(tweets.size)]).length <=
-        TWEET_LIMIT - MECAB_TWEET.map{ |t| t.length }.max
+        TWEET_LIMIT - MECAB_TWEET.max_by{ |t| t.length }
         return ret + MECAB_TWEET.sample
       end
     end
