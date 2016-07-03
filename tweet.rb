@@ -155,7 +155,7 @@ class Tweet
     # 最新200件にツイートされていないテーマを選ぶ
     @last_200_tweets.each{ |tw|
       tw = delete_https(tw.text)
-      indexes.delete(@text.index{ |t| t.include?(tw) } if tw[-1] == '─')
+      indexes.delete(@text.index{ |t| t.include?(tw) }) if tw[-1] == '─'
     }
     indexes.sample
   end
