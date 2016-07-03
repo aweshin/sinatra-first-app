@@ -8,10 +8,14 @@ TWEET_LIMIT = 140
 MEDIA_URL_LENGTH = 24
 # 重複ツイートのupload間隔
 INTERVAL = 12
+# テーマの終了記号
+END_OF_THEME = '─'
+# MECAB_TWEETの連続数
+SEQUENCE_OF_MECAB_TWEET = 3
 # テキストの取捨選択
 SENTENCE_NO = [32..42, 44..45, 62..68, 99..99, 106..106, 112..117, 139..-1]
 # mecabツイートの語尾
-MECAB_TWEET = ['なんてね。', 'とか言ってみる。', 'ふむふむ…',
+END_OF_MECAB_TWEET = ['なんてね。', 'とか言ってみる。', 'ふむふむ…',
                '(ry', '経験のパラレルワールド。', 'ちょっとしたファンタジー。',
                'からの経験の立ち上げ。', '…ああ。',
                'じっと手を見る。', 'ことばのカタルシス。', 'ちょっと危険。',
@@ -82,33 +86,27 @@ class Tweet
     update(tweet)
   end
 
-  def tweet_hybrid
-    # 7割普通、 3割mecab
-    @random.rand(10) > 2 ? normal_tweet : random_tweet_using_mecab
-  end
-
   private
 
+  # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分MECAB_TWEETし、復帰
   def tweet_index
     @text = @text.flat_map{ |t| check_limit(t) }
     @text = join_text(@text)
-    # メディアツイート分を削除
-    indexes = @last_200_tweets[0,4].map{ |tw|
+    indexes = @last_200_tweets[0,SEQUENCE_OF_MECAB_TWEET].map{ |tw|
       tw = delete_https(tw.text)
       @text.index{ |t| t.include?(tw) }
     }
-    return unless indexes.any?
     index = indexes[0]
     unless index
-      unless indexes[0,3].any?
-        # テーマをランダムに決める
+      unless indexes.any?
+        # 新しいテーマを決める
         index = next_theme
       else
         random_tweet_using_mecab
         return
       end
     else
-      if delete_https(@last_tweet)[-1] == '─'
+      if delete_https(@last_tweet)[-1] == END_OF_THEME
         random_tweet_using_mecab
         return
       end
@@ -151,11 +149,11 @@ class Tweet
 
   def next_theme
     indexes = @text.map.with_index{ |t, i|
-      i if delete_https(t)[-1] == '─' }.compact
+      i if delete_https(t)[-1] == END_OF_THEME }.compact
     # 最新200件にツイートされていないテーマを選ぶ
     list = @last_200_tweets.map{ |tw|
       tw = delete_https(tw.text)
-      @text.index{ |t| t.include?(tw) } if tw[-1] == '─'
+      @text.index{ |t| t.include?(tw) } if tw[-1] == END_OF_THEME
     }.compact
     # １つ前のテーマの最後のインデックスを消す（前から見た次のテーマ＝該当するテーマ）
     (indexes - list.map{ |index| indexes[indexes.index(index) - 1] }).sample
@@ -167,7 +165,7 @@ class Tweet
     while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
       ret += tweet.slice!(0, tweet.index(/。|！|？|──?/) + 1)
     end
-    tweet = '─' if tweet.empty?
+    tweet = 'こちら' if tweet.empty?
     [ret, tweet]
   end
 
@@ -214,8 +212,8 @@ class Tweet
       tweets = check_limit(text)
       if tweets.instance_of?(Array) &&
         (ret = tweets[@random.rand(tweets.size)]).length <=
-        TWEET_LIMIT - MECAB_TWEET.max_by{ |t| t.length }.length
-        return ret + MECAB_TWEET.sample
+        TWEET_LIMIT - END_OF_MECAB_TWEET.max_by{ |t| t.length }.length
+        return ret + END_OF_MECAB_TWEET.sample
       end
     end
   end
