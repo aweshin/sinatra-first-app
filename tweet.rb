@@ -102,7 +102,7 @@ class Tweet
     unless index
       unless indexes[0,3].any?
         # テーマをランダムに決める
-        index = next_theme(indexes[3])
+        index = next_theme
       else
         random_tweet_using_mecab
         return
@@ -149,15 +149,16 @@ class Tweet
     tweet.gsub(/\s?https?.+?──|\s?https?.+─?/, '')
   end
 
-  def next_theme(index)
+  def next_theme
     indexes = @text.map.with_index{ |t, i|
       i if delete_https(t)[-1] == '─' }.compact
     # 最新200件にツイートされていないテーマを選ぶ
-    @last_200_tweets.each{ |tw|
+    list = @last_200_tweets.map{ |tw|
       tw = delete_https(tw.text)
-      indexes.delete(@text.index{ |t| t.include?(tw) }) if tw[-1] == '─'
-    }
-    indexes.sample
+      @text.index{ |t| t.include?(tw) } if tw[-1] == '─'
+    }.compact
+    # １つ前のテーマの最後のインデックスを消す（前から見た次のテーマ＝該当するテーマ）
+    (indexes - list.map{ |index| indexes[indexes.index(index) - 1] }).sample
   end
 
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
@@ -213,7 +214,7 @@ class Tweet
       tweets = check_limit(text)
       if tweets.instance_of?(Array) &&
         (ret = tweets[@random.rand(tweets.size)]).length <=
-        TWEET_LIMIT - MECAB_TWEET.max_by{ |t| t.length }
+        TWEET_LIMIT - MECAB_TWEET.max_by{ |t| t.length }.length
         return ret + MECAB_TWEET.sample
       end
     end
