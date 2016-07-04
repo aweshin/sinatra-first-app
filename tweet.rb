@@ -29,7 +29,8 @@ WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'music bottles',
               'sublimate',
               'フランシス・ベーコン',
-              '反転図形から反転図形']
+              '反転図形から反転図形',
+              'オパビニア']
 MEDIA = ['gene_meme.png',
          'wingsuits.png',
          'arakawa_1.png',
@@ -38,7 +39,8 @@ MEDIA = ['gene_meme.png',
          'musicBottles.png',
          'sublimate.png',
          'bacon.png',
-         'reversible_fig.gif']
+         'reversible_fig.gif',
+         'ancient_creatures.jpg']
 
 class Tweet
   def initialize
