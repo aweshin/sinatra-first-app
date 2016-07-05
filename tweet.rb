@@ -20,6 +20,7 @@ END_OF_MECAB_TWEET = ['なんてね。', 'とか言ってみる。', 'ふむふ�
                'からの経験の立ち上げ。', '…ああ。',
                'じっと手を見る。', 'ことばのカタルシス。', 'ちょっと危険。',
                'そっとささやく。', "#{(rand(1..100) ** 2) / 100}点。"]
+HASH_TAG = ' #ほぼ駄文ですが、たまにいいこと言います。'
 # メディアツイート
 WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'Wingsuits',
@@ -187,7 +188,7 @@ class Tweet
   # マルコフ連鎖用辞書の作成
   def make_dic
     @text.each do |t|
-      t.gsub!(/「|」/, '')
+      t.gsub!(/「.+?」|（.+?）|─.+?──?|【.+?】|『.+?』/, '')
     end
     nm = Natto::MeCab.new
     data = ['BEGIN','BEGIN']
@@ -214,8 +215,8 @@ class Tweet
       tweets = check_limit(text)
       if tweets.instance_of?(Array) &&
         (ret = tweets[@random.rand(tweets.size)]).length <=
-        TWEET_LIMIT - END_OF_MECAB_TWEET.max_by{ |t| t.length }.length
-        return ret + END_OF_MECAB_TWEET.sample
+        TWEET_LIMIT - END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG.length
+        return ret + END_OF_MECAB_TWEET.sample + HASH_TAG
       end
     end
   end
