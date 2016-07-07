@@ -96,7 +96,7 @@ class Tweet
       @text.index{ |t| t.include?(tw) }
     }
     # 分割ツイートで最新ツイートがメディアのみの場合を考慮
-    index = is_words?(@text[indexes[0]]) ? indexes[1] : indexes[0] if index
+    index = is_words?(@text[indexes[0]]) ? indexes[1] : indexes[0] if indexes[0]
     unless index
       # 新しいテーマを決める
       index = next_theme unless indexes.any?
