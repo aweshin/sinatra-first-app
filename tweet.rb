@@ -11,7 +11,7 @@ INTERVAL = 12
 # テーマの終了記号
 END_OF_THEME = '─'
 # MECAB_TWEETの連続数
-SEQUENCE_OF_MECAB_TWEET = (1..3).to_a.sample
+SEQUENCE_OF_MECAB_TWEET = (2..3).to_a.sample
 # テキストの取捨選択
 SENTENCE_NO = [32..42, 44..45, 62..68, 99..99, 106..106, 112..117, 139..-1]
 # mecabツイートの語尾
@@ -99,7 +99,8 @@ class Tweet
       tw = delete_https(tw.text)
       @text.index{ |t| t.include?(tw) }
     }
-    index = indexes[0]
+    # 分割ツイートで最新ツイートがメディアのみの場合を考慮
+    index = @last_tweet[-1].match(/。|！|？|─/) ? indexes[0] : indexes[1]
     unless index
       unless indexes.any?
         # 新しいテーマを決める
@@ -136,11 +137,26 @@ class Tweet
   def join_text(text)
     ret = [text.shift]
     text.each do |t|
-      if ret.last.size + t.size <= TWEET_LIMIT &&
-        !(ret.last[-1].match(/。|！|？|─/))
-        ret[-1] = [ret.last, t].join("\n")
-      else
-        ret << t
+      # 前の文章が句読点で終わっていなければ
+      unless ret[-1].match(/。|！|？|─/)
+        loop do
+          index = t.index(/。|！|？|─/)
+          index = t.length - 1 unless index
+          # 空文なら終了
+          break if index == -1
+          #️⃣ 次の１文を足しても文字数が超過しなければ
+          if ret.last.length + index + 1 <= TWEET_LIMIT
+            if ret.last[-1].match(/。|！|？|─/)
+              ret[-1] += t.slice!(0, index + 1)
+            else
+              ret[-1] += "\n" + t.slice!(0, index + 1)
+            end
+          else
+            ret << t
+            break
+          end
+        end
+      else ret << t
       end
     end
     ret
@@ -168,6 +184,7 @@ class Tweet
     while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
       ret += tweet.slice!(0, tweet.index(/。|！|？|──?/) + 1)
     end
+    # 最新ツイートがメディアのみの場合を考慮
     tweet = 'こちら' if tweet.empty?
     [ret, tweet]
   end
