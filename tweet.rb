@@ -74,7 +74,7 @@ class Tweet
         update(tweet)
       end
     else
-      update('もうだめぽ')
+      random_tweet_using_mecab
     end
   end
 
@@ -96,20 +96,12 @@ class Tweet
       @text.index{ |t| t.include?(tw) }
     }
     # 分割ツイートで最新ツイートがメディアのみの場合を考慮
-    index = is_words?(@text[indexes[0]]) ? indexes[1] : indexes[0]
+    index = is_words?(@text[indexes[0]]) ? indexes[1] : indexes[0] if index
     unless index
-      unless indexes.any?
-        # 新しいテーマを決める
-        index = next_theme
-      else
-        random_tweet_using_mecab
-        return
-      end
+      # 新しいテーマを決める
+      index = next_theme unless indexes.any?
     else
-      if delete_https(@text[indexes[0]])[-1] == END_OF_THEME
-        random_tweet_using_mecab
-        return
-      end
+      return if delete_https(@text[indexes[0]])[-1] == END_OF_THEME
     end
     index
   end
@@ -121,7 +113,7 @@ class Tweet
       index = text[0,TWEET_LIMIT].rindex(/。|！|？|──/)
       unless index
         if ret.empty?
-          return text.gsub(/（.+?）/, '')
+          return [text.gsub(/（.+?）/, '')]
         else
           return ret
         end
@@ -228,8 +220,7 @@ class Tweet
     loop do
       text = connect(dic)
       tweets = check_limit(text)
-      if tweets.instance_of?(Array) &&
-        (ret = tweets[rand(tweets.size)]).length <=
+      if (ret = tweets[rand(tweets.size)]).length <=
         TWEET_LIMIT - END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG.length
         return ret + END_OF_MECAB_TWEET.sample + HASH_TAG
       end
