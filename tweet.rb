@@ -108,7 +108,9 @@ class Tweet
     # 分割ツイートで最新ツイートがメディアのみの場合を考慮
     index = is_words?(@text[indexes[0]]) ? indexes[1] : indexes[0] if indexes[0]
     unless index
-      index = @text.index{ |t| t.include?(@text[indexes.last].match('【.+?】').to_s) } unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
+      unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
+        index = @text.index{ |t| t.include?(@text[indexes.last].match('【.+?】').to_s) } - 1
+      end
     else
       return if delete_https(@text[indexes[0]])[-1] == END_OF_THEME
     end
