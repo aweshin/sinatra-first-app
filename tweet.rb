@@ -74,8 +74,7 @@ class Tweet
         update(tweet, open('./media/' + MEDIA[media_index]))
       # テーマの終わり
       elsif delete_https(tweet)[-1] == END_OF_THEME
-        next_num = @text[next_theme + 1]
-        tweet += '次は' + next_num[0, next_num.index('】')]
+        tweet += '次は【' + next_theme.to_s + '】'
         # 分割ツイート
         text, tweet = split_tweet(tweet)
         update(text) unless text.empty?
