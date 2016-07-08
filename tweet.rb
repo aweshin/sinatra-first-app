@@ -104,7 +104,7 @@ class Tweet
     tweets = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1)
     last_tweet = tweets[0].text
     indexes = tweets.map{ |tw|
-      tw = delete_https(tw.text).gsub(/【.+?】/, '')
+      tw = delete_https(tw.text).gsub(/次は【\d+】/, '')
       @text.index{ |t| t.include?(tw) }
     }
     index = indexes[0]
@@ -119,7 +119,7 @@ class Tweet
     unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
       number = ''
       tweets.each{ |tw|
-        break if number = tw.text.slice(-7,7).match('【.+?】')
+        break if number = tw.text.slice(-7,7).match(/【\d+】/)
       }
       index = @text.index{ |t| t.include?(number.to_s) } - 1
     end
@@ -153,9 +153,8 @@ class Tweet
           # 空文なら終了
           break if index == -1
           # 次の１文を足しても文字数が超過しなければ
-          if ret.last.length + index + 1 <= TWEET_LIMIT
-            ret[-1] += is_words?(ret.last) ? "\n" + t.slice!(0, index + 1)
-              : t.slice!(0, index + 1)
+          if ret.last.length + index + 1 + (is_words?(ret.last) ? 1 : 0) <= TWEET_LIMIT
+            ret[-1] += (is_words?(ret.last) ? "\n" : '') + t.slice!(0, index + 1)
           else
             ret << t
             break
@@ -169,7 +168,6 @@ class Tweet
   end
 
   def is_words?(text)
-    return true unless text
     !text[-1].match(/。|！|？|─/)
   end
 
