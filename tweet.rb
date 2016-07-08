@@ -70,7 +70,7 @@ class Tweet
         text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH)
         update(text) unless text.empty?
         # 最新ツイートがメディアのみの場合を考慮
-        tweet = 'こちら' if tweet.empty?
+        tweet = '【こちら】' if tweet.empty?
         update(tweet, open('./media/' + MEDIA[media_index]))
       # テーマの終わり
       elsif delete_https(tweet)[-1] == END_OF_THEME
@@ -98,9 +98,11 @@ class Tweet
 
   private
 
-  # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分MECAB_TWEETし、復帰
+  # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
   def last_tweet_index
-    indexes = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1).map{ |tw|
+    tweets = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1)
+    last_tweet = tweets[0].text
+    indexes = tweets.map{ |tw|
       tw = delete_https(tw.text)
       @text.index{ |t| t.include?(tw) }
     }
@@ -108,14 +110,14 @@ class Tweet
     unless index
       # 復帰
       unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
-        index = @text.index{ |t| t.include?(@text[indexes.last].match('【.+?】').to_s) } - 1
+        index = @text.index{ |t| t.include?(tweets[-1].text.match('【.+?】').to_s) } - 1
       # 分割ツイートを考慮
-      else delete_https(@text[indexes[1]])[-1] != END_OF_THEME
+      else delete_https(last_tweet)[-1] == '】'
         index = indexes[1]
       end
     end
     # mecab_tweetの開始
-    return if delete_https(@text[index])[-1] == END_OF_THEME
+    return if delete_https(@text[index])[-1] == '】'
     index
   end
 
@@ -209,6 +211,7 @@ class Tweet
   def make_dic(dic)
     @text.each do |t|
       t.gsub!(/「.+?」。?|（.+?）|─.+?──?|【.+?】|『.+?』/, '')
+      t.gsub!(/「|」/, '')
     end
     nm = Natto::MeCab.new
     data = ['BEGIN','BEGIN']
