@@ -11,8 +11,8 @@ INTERVAL = 12
 # テーマの終了記号
 END_OF_THEME = '─'
 # MECAB_TWEETの連続数
-SEQUENCE_OF_MECAB_TWEET = (2..3).to_a.sample
-# テキストの取捨選択
+SEQUENCE_OF_MECAB_TWEET = 2
+
 SENTENCE_NO = [32..42, 44..60, 62..68, 99..99, 106..106, 112..117, 139..-1]
 # mecabツイートの語尾
 END_OF_MECAB_TWEET = ['なんてね。', 'とか言ってみる。', 'ふむふむ…',
@@ -64,12 +64,22 @@ class Tweet
   def normal_tweet
     if index = tweet_index
       tweet = @text[(index + 1) % @text.size]
+      # メディアツイート
       if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
-        # メディアツイート
-        text, tweet = split_tweet(tweet)
         # 分割ツイート
+        text, tweet = split_tweet(tweet)
         update(text) unless text.empty?
+        # 最新ツイートがメディアのみの場合を考慮
+        tweet = 'こちら' if tweet.empty?
         update(tweet, open('./media/' + MEDIA[media_index]))
+      # テーマの終わり
+      elsif delete_https(tweet)[-1] == END_OF_THEME
+        next_num = @text[next_theme + 1]
+        tweet += '次は' + next_num[0, next_num.index('】')]
+        # 分割ツイート
+        text, tweet = split_tweet(tweet)
+        update(text)
+        update(tweet) unless tweet.empty?
       else
         update(tweet)
       end
@@ -91,15 +101,14 @@ class Tweet
 
   # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分MECAB_TWEETし、復帰
   def tweet_index
-    indexes = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET).map{ |tw|
+    indexes = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1).map{ |tw|
       tw = delete_https(tw.text)
       @text.index{ |t| t.include?(tw) }
     }
     # 分割ツイートで最新ツイートがメディアのみの場合を考慮
     index = is_words?(@text[indexes[0]]) ? indexes[1] : indexes[0] if indexes[0]
     unless index
-      # 新しいテーマを決める
-      index = next_theme unless indexes.any?
+      index = @text.index{ |t| t.include?(@text[indexes.last].match('【.+?】').to_s) } unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
     else
       return if delete_https(@text[indexes[0]])[-1] == END_OF_THEME
     end
@@ -156,6 +165,7 @@ class Tweet
     tweet.gsub(/\s?https?.+?──|\s?https?.+─?/, '')
   end
 
+  # 新しいテーマを決める
   def next_theme
     indexes = @text.map.with_index{ |t, i|
       i if delete_https(t)[-1] == END_OF_THEME }.compact
@@ -174,8 +184,6 @@ class Tweet
     while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
       ret += tweet.slice!(0, tweet.index(/。|！|？|──?/) + 1)
     end
-    # 最新ツイートがメディアのみの場合を考慮
-    tweet = 'こちら' if tweet.empty?
     [ret, tweet]
   end
 
