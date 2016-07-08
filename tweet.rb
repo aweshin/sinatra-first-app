@@ -64,22 +64,23 @@ class Tweet
   def normal_tweet
     if index = last_tweet_index
       tweet = @text[(index + 1) % @text.size]
+      text = ''
+      # テーマの終わり
+      if delete_https(tweet)[-1] == END_OF_THEME
+        tweet += '次は【' + next_theme.to_s + '】'
+      end
       # メディアツイート
       if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
         # 分割ツイート
         text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH)
         update(text) unless text.empty?
         # 最新ツイートがメディアのみの場合を考慮
-        tweet = '【こちら】' if tweet.empty?
+        tweet = '《こちら》' if tweet.empty?
         update(tweet, open('./media/' + MEDIA[media_index]))
-      # テーマの終わり
-      elsif delete_https(tweet)[-1] == END_OF_THEME
-        tweet += '次は【' + next_theme.to_s + '】'
+      else
         # 分割ツイート
         text, tweet = split_tweet(tweet)
         update(text) unless text.empty?
-        update(tweet)
-      else
         update(tweet)
       end
     else
@@ -103,21 +104,25 @@ class Tweet
     tweets = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1)
     last_tweet = tweets[0].text
     indexes = tweets.map{ |tw|
-      tw = delete_https(tw.text)
+      tw = delete_https(tw.text).gsub(/【.+?】/, '')
       @text.index{ |t| t.include?(tw) }
     }
     index = indexes[0]
-    unless index
-      # 復帰
-      unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
-        index = @text.index{ |t| t.include?(tweets[-1].text.match('【.+?】').to_s) } - 1
-      # 分割ツイートを考慮
-      else delete_https(last_tweet)[-1] == '】'
-        index = indexes[1]
-      end
+    # メディアツイートを考慮
+    if delete_https(last_tweet) == '《こちら》'
+      index = indexes[1]
     end
     # mecab_tweetの開始
-    return if delete_https(@text[index])[-1] == '】'
+    return if index && delete_https(@text[index])[-1] == END_OF_THEME
+
+    # 復帰
+    unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
+      number = ''
+      tweets.each{ |tw|
+        break if number = tw.text.slice(-7,7).match('【.+?】')
+      }
+      index = @text.index{ |t| t.include?(number.to_s) } - 1
+    end
     index
   end
 
@@ -175,14 +180,15 @@ class Tweet
   # 新しいテーマを決める
   def next_theme
     # 最新200件にツイートされていないテーマを選ぶ
-    (@text.map{ |t|
+    all = @text.map{ |t|
       md = t.match(/【(\d+)】/)
       md[1].to_i if md
-     }.compact
-    - @client.home_timeline(:count => 200).map{ |tw|
+    }.compact
+    fresh_tweet = @client.home_timeline(:count => 200).map{ |tw|
        md = tw.text.match(/【(\d+)】/)
        md[1].to_i if md
-      }.compact).sample
+    }.compact
+    (all - fresh_tweet).sample
   end
 
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
@@ -211,7 +217,7 @@ class Tweet
   def make_dic(dic)
     @text.each do |t|
       t.gsub!(/「.+?」。?|（.+?）|─.+?──?|【.+?】|『.+?』/, '')
-      t.gsub!(/「|」/, '')
+      t.gsub!(/「|」|"/, '')
     end
     nm = Natto::MeCab.new
     data = ['BEGIN','BEGIN']
