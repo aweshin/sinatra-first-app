@@ -99,33 +99,6 @@ class Tweet
 
   private
 
-  # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
-  def last_tweet_index
-    tweets = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1)
-    last_tweet = tweets[0].text
-    indexes = tweets.map{ |tw|
-      tw = delete_https(tw.text).gsub(/次は【\d+】/, '')
-      @text.index{ |t| t.include?(tw) }
-    }
-    index = indexes[0]
-    # メディアツイートを考慮
-    if delete_https(last_tweet) == '《こちら》'
-      index = indexes[1]
-    end
-    # mecab_tweetの開始
-    return if index && delete_https(@text[index])[-1] == END_OF_THEME
-
-    # 復帰
-    unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
-      number = ''
-      tweets.each{ |tw|
-        break if number = tw.text.slice(-7,7).match(/【\d+】/)
-      }
-      index = @text.index{ |t| t.include?(number.to_s) } - 1
-    end
-    index
-  end
-
   # TWEET_LIMIT以内に1文以上がおさまるか
   def check_limit(text)
     ret = []
@@ -171,8 +144,40 @@ class Tweet
     !text[-1].match(/。|！|？|─/)
   end
 
+  # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
+  def last_tweet_index
+    tweets = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1)
+    last_tweet = tweets[0].text
+    indexes = tweets.map{ |tw|
+      tw = delete_https(tw.text).gsub(/次は【\d+】/, '')
+      @text.index{ |t| t.include?(tw) }
+    }
+    index = indexes[0]
+    # メディアツイートを考慮
+    if delete_https(last_tweet) == '《こちら》'
+      index = indexes[1]
+    end
+    # mecab_tweetの開始
+    return if index && delete_https(@text[index])[-1] == END_OF_THEME
+
+    # 復帰
+    unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
+      index = @text.index{ |t| t.include?(find_number(tweets)) } - 1
+    end
+    index
+  end
+
   def delete_https(tweet)
     tweet.gsub(/\s?https?.+?──|\s?https?.+─?/, '')
+  end
+
+  # 番号付けされたテーマの番号を直近のツイートから追跡
+  def find_number(tweets)
+    tweets.each do |tw|
+      if number = tw.text.slice(-6, 6).match(/【\d+】/)
+        return number.to_s
+      end
+    end
   end
 
   # 新しいテーマを決める
