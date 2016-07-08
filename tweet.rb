@@ -67,7 +67,7 @@ class Tweet
       # メディアツイート
       if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
         # 分割ツイート
-        text, tweet = split_tweet(tweet)
+        text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH)
         update(text) unless text.empty?
         # 最新ツイートがメディアのみの場合を考慮
         tweet = 'こちら' if tweet.empty?
@@ -78,8 +78,8 @@ class Tweet
         tweet += '次は' + next_num[0, next_num.index('】')]
         # 分割ツイート
         text, tweet = split_tweet(tweet)
-        update(text)
-        update(tweet) unless tweet.empty?
+        update(text) unless text.empty?
+        update(tweet)
       else
         update(tweet)
       end
@@ -114,10 +114,9 @@ class Tweet
       else delete_https(@text[indexes[1]])[-1] != END_OF_THEME
         index = indexes[1]
       end
-    # mecab_tweetの開始
-    else
-      return if delete_https(@text[indexes[0]])[-1] == END_OF_THEME
     end
+    # mecab_tweetの開始
+    return if delete_https(@text[index])[-1] == END_OF_THEME
     index
   end
 
@@ -186,12 +185,12 @@ class Tweet
   end
 
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
-  def split_tweet(tweet)
-    ret = ''
-    while tweet.length > TWEET_LIMIT - MEDIA_URL_LENGTH
-      ret += tweet.slice!(0, tweet.index(/。|！|？|──?/) + 1)
+  def split_tweet(tweet, add_words_length = 0)
+    text = ''
+    while tweet.length > TWEET_LIMIT - add_words_length
+      text += tweet.slice!(0, tweet.index(/。|！|？|──?/) + 1)
     end
-    [ret, tweet]
+    [text, tweet]
   end
 
   def update(tweet, media = nil)
