@@ -62,7 +62,7 @@ class Tweet
   end
 
   def normal_tweet
-    if index = tweet_index
+    if index = last_tweet_index
       tweet = @text[(index + 1) % @text.size]
       # メディアツイート
       if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
@@ -100,17 +100,21 @@ class Tweet
   private
 
   # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分MECAB_TWEETし、復帰
-  def tweet_index
+  def last_tweet_index
     indexes = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1).map{ |tw|
       tw = delete_https(tw.text)
       @text.index{ |t| t.include?(tw) }
     }
-    # 分割ツイートで最新ツイートがメディアのみの場合を考慮
-    index = is_words?(@text[indexes[0]]) ? indexes[1] : indexes[0] if indexes[0]
+    index = indexes[0]
     unless index
+      # 復帰
       unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
         index = @text.index{ |t| t.include?(@text[indexes.last].match('【.+?】').to_s) } - 1
+      # 分割ツイートを考慮
+      else delete_https(@text[indexes[1]])[-1] != END_OF_THEME
+        index = indexes[1]
       end
+    # mecab_tweetの開始
     else
       return if delete_https(@text[indexes[0]])[-1] == END_OF_THEME
     end
@@ -160,6 +164,7 @@ class Tweet
   end
 
   def is_words?(text)
+    return true unless text
     !text[-1].match(/。|！|？|─/)
   end
 
@@ -169,15 +174,15 @@ class Tweet
 
   # 新しいテーマを決める
   def next_theme
-    indexes = @text.map.with_index{ |t, i|
-      i if delete_https(t)[-1] == END_OF_THEME }.compact
     # 最新200件にツイートされていないテーマを選ぶ
-    list = @client.home_timeline(:count => 200).map{ |tw|
-      tw = delete_https(tw.text)
-      @text.index{ |t| t.include?(tw) } if tw[-1] == END_OF_THEME
-    }.compact
-    # １つ前のテーマの最後のインデックスを消す（前から見た次のテーマ＝該当するテーマ）
-    (indexes - list.map{ |index| indexes[indexes.index(index) - 1] }).sample
+    (@text.map{ |t|
+      md = t.match(/【(\d+)】/)
+      md[1].to_i if md
+     }.compact
+    - @client.home_timeline(:count => 200).map{ |tw|
+       md = tw.text.match(/【(\d+)】/)
+       md[1].to_i if md
+      }.compact).sample
   end
 
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
