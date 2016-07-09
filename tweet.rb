@@ -6,14 +6,14 @@ require 'natto'
 TWEET_LIMIT = 140
 # メディアツイートの短縮URL
 MEDIA_URL_LENGTH = 24
-# 重複ツイートのupload間隔
+# 重複ツイートのupload間隔(12時間)
 INTERVAL = 12
 # テーマの終了記号
 END_OF_THEME = '─'
 # MECAB_TWEETの連続数
 SEQUENCE_OF_MECAB_TWEET = 2
 
-SENTENCE_NO = [32..42, 44..60, 62..68, 99..99, 106..106, 112..117, 139..-1]
+SENTENCE_NO = [32..42, 44..45, 56..60, 62..68, 99..99, 106..106, 112..117, 139..-1]
 # mecabツイートの語尾
 END_OF_MECAB_TWEET = ['なんてね。', 'とか言ってみる。', 'ふむふむ…',
                '(ry', 'としてのパラレルワールド。', 'ちょっとしたファンタジー。',
@@ -101,15 +101,24 @@ class Tweet
 
   # TWEET_LIMIT以内に1文以上がおさまるか
   def check_limit(text)
+    text.slice!(text.rindex(/（/)..-1)
+    if text[-1].match(/。|！|？|─/)
+      return check_limit2(text)
+    else
+      text += '。' # ダミー
+      ret = check_limit2(text)
+      ret[-1].slice!(-1)
+      return ret
+    end
+  end
+
+  def check_limit2(text)
     ret = []
     loop do
       index = text[0,TWEET_LIMIT].rindex(/。|！|？|──/)
       unless index
-        if ret.empty?
-          return [text.gsub(/（.+?）/, '')]
-        else
-          return ret
-        end
+        ret << text unless text == END_OF_THEME || text.empty?
+        return ret
       end
       ret << text.slice!(0, index + 1)
     end
@@ -118,21 +127,9 @@ class Tweet
   def join_text(text)
     ret = [text.shift]
     text.each do |t|
-      # 前の文章が句読点で終わっていなければ
-      if is_words?(ret.last)
-        loop do
-          index = t.index(/。|！|？|─/)
-          index = t.length - 1 unless index
-          # 空文なら終了
-          break if index == -1
-          # 次の１文を足しても文字数が超過しなければ
-          if ret.last.length + index + 1 + (is_words?(ret.last) ? 1 : 0) <= TWEET_LIMIT
-            ret[-1] += (is_words?(ret.last) ? "\n" : '') + t.slice!(0, index + 1)
-          else
-            ret << t
-            break
-          end
-        end
+      # 前の文章が句読点で終わっていない、かつ、次の文章を足しても文字数が超過しなければ
+      if is_words?(ret.last) && ret.last.length + t.length <= TWEET_LIMIT
+        ret[-1] += "\n" + t
       else
         ret << t
       end
@@ -174,8 +171,8 @@ class Tweet
   # 番号付けされたテーマの番号を直近のツイートから追跡
   def find_number(tweets)
     tweets.each do |tw|
-      if number = tw.text.slice(-6, 6).match(/【\d+】/)
-        return number.to_s
+      if number = tw.text.slice(-5, 5).match(/\d+】/)
+        return '【' + number.to_s
       end
     end
   end
