@@ -16,8 +16,8 @@ SEQUENCE_OF_MECAB_TWEET = 2
 SENTENCE_NO = [32..42, 44..45, 56..60, 62..68, 99..99, 106..106, 112..117, 139..-1]
 # mecabツイートの語尾
 END_OF_MECAB_TWEET = ['なんてね。', 'とか言ってみる。', 'ふむふむ…',
-               '(ry', 'としてのパラレルワールド。', 'ちょっとしたファンタジー。',
-               'からの経験の立ち上げ。', '…ああ。',
+               'パラレルワールドみたいな。', 'ちょっとしたファンタジー。',
+               'ここから経験を立ち上げる。', '…ああ。',
                'じっと手を見る。', 'ことばのカタルシス。', 'ちょっと危険。',
                'そっとささやく。', "#{(rand(1..100) ** 2) / 100}点。"]
 HASH_TAG = ' #ほぼ駄文ですが'
@@ -51,7 +51,7 @@ class Tweet
     SENTENCE_NO.each do |i|
       text += sentences[i]
     end
-    @text = join_text(text.flat_map{ |t| check_limit(t) })
+    @text = join_text(text.flat_map{ |t| from_text_to_tweets(t) })
 
     @client = Twitter::REST::Client.new(
       consumer_key:        ENV['TWITTER_CONSUMER_KEY'],
@@ -99,20 +99,21 @@ class Tweet
 
   private
 
-  # TWEET_LIMIT以内に1文以上がおさまるか
-  def check_limit(text)
-    text.slice!(text.rindex(/（/)..-1)
+  # TWEET_LIMIT以内で文章を切る。
+  def from_text_to_tweets(text)
+    text.slice!(text.rindex(/（/)..-1) if text[-1] == '）'
+    # 句点（に準ずるもの）で終了していれば
     if text[-1].match(/。|！|？|─/)
-      return check_limit2(text)
+      return slice_text(text)
     else
       text += '。' # ダミー
-      ret = check_limit2(text)
+      ret = slice_text(text)
       ret[-1].slice!(-1)
       return ret
     end
   end
 
-  def check_limit2(text)
+  def slice_text(text)
     ret = []
     loop do
       index = text[0,TWEET_LIMIT].rindex(/。|！|？|──/)
@@ -241,7 +242,7 @@ class Tweet
   def choice_sentence(dic)
     loop do
       text = connect(dic)
-      tweets = check_limit(text)
+      tweets = from_text_to_tweets(text)
       if (ret = tweets[rand(tweets.size)]).length <=
         TWEET_LIMIT - END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG.length
         return ret + END_OF_MECAB_TWEET.sample + HASH_TAG
