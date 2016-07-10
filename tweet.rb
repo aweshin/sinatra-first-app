@@ -180,16 +180,22 @@ class Tweet
 
   # 新しいテーマを決める
   def next_theme
-    # 最新200件にツイートされていないテーマを選ぶ
-    all = @text.map{ |t|
+    # 最新400件にツイートされていないテーマを選ぶ
+    theme_numbers = @text.map{ |t|
       md = t.match(/【(\d+)】/)
       md[1].to_i if md
     }.compact
-    fresh_tweet = @client.home_timeline(:count => 200).map{ |tw|
-       md = tw.text.match(/【(\d+)】/)
-       md[1].to_i if md
-    }.compact
-    (all - fresh_tweet).sample
+    timeline = @client.home_timeline(:count => 200)
+    maxid = 0
+    2.times do
+      timeline.each do |tw|
+        md = tw.text.match(/【(\d+)】/)
+        theme_numbers.delete(md[1].to_i) if md
+        maxid = tw.id - 1
+      end
+      timeline = @client.home_timeline(:count => 200, :max_id => maxid)
+    end
+    theme_numbers.sample
   end
 
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
