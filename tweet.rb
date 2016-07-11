@@ -161,7 +161,7 @@ class Tweet
       index = indexes[1]
     end
     # mecab_tweetの開始
-    return if index && delete_https(@text[index])[-1] == END_OF_THEME
+    return if index && last_tweet[-1] == '】'
 
     # 復帰
     unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
