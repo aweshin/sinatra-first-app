@@ -83,7 +83,7 @@ class Tweet
         tweet = '《こちら》' if tweet.empty?
         media_ids = media_indexes.map{ |i| @client.upload(open('./media/' + MEDIA[i])) }
         # media_idsは、media_idをstring型に変換。
-        # 32ビットの巨大数なので、json_decodeで「6.17xxxxxxxxxE+17」というような値に変換されてしまう
+        # 巨大数なので、json_decodeで「x.xxE+17」というような値に変換されてしまう
         update(tweet, { media_ids: media_ids.join(',') } )
       else
         # 分割ツイート
@@ -99,7 +99,7 @@ class Tweet
   # 形態素解析して作文する
   def random_tweet_using_mecab
     @text.shuffle!
-    dic = {}
+    dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     tweet = choice_sentence(dic)
     update(tweet)
@@ -152,8 +152,11 @@ class Tweet
 
   # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
   def last_tweet_index
-    tweets = @client.user_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1)
+    tweets = @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET + 1)
     last_tweet = tweets[0].text
+    # mecab_tweetの開始
+    return if last_tweet[-1] == '】'
+
     indexes = tweets.map{ |tw|
       tw = delete_https(tw.text).gsub(/次は【\d+】/, '')
       @text.index{ |t| t.include?(tw) }
@@ -163,8 +166,6 @@ class Tweet
     if delete_https(last_tweet) == '《こちら》'
       index = indexes[1]
     end
-    # mecab_tweetの開始
-    return if last_tweet[-1] == '】'
 
     # 復帰
     unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
@@ -193,7 +194,7 @@ class Tweet
       md = t.match(/【(\d+)】/)
       md[1].to_i if md
     }.compact
-    timeline = @client.user_timeline(:count => 200)
+    timeline = @client.user_timeline(count: 200)
     maxid = 0
     2.times do
       timeline.each do |tw|
@@ -201,7 +202,7 @@ class Tweet
         theme_numbers.delete(md[1].to_i) if md
         maxid = tw.id - 1
       end
-      timeline = @client.user_timeline(:count => 200, :max_id => maxid)
+      timeline = @client.user_timeline(count: 200, max_id: maxid)
     end
     theme_numbers.sample
   end
@@ -248,7 +249,6 @@ class Tweet
     data.each_cons(3).each do |a|
       suffix = a.pop
       prefix = a
-      dic[prefix] ||= []
       dic[prefix] << suffix
     end
   end
