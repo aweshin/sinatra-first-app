@@ -82,7 +82,9 @@ class Tweet
         # 最新ツイートがメディアのみの場合を考慮
         tweet = '《こちら》' if tweet.empty?
         media_ids = media_indexes.map{ |i| @client.upload(open('./media/' + MEDIA[i])) }
-        update(tweet, { media_ids => media_ids.join(',') } )
+        # media_idsは、media_idをstring型に変換。
+        # 32ビットの巨大数なので、json_decodeで「6.17xxxxxxxxxE+17」というような値に変換されてしまう
+        update(tweet, { media_ids: media_ids.join(',') } )
       else
         # 分割ツイート
         text, tweet = split_tweet(tweet)
@@ -150,7 +152,7 @@ class Tweet
 
   # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
   def last_tweet_index
-    tweets = @client.home_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1)
+    tweets = @client.user_timeline(:count => SEQUENCE_OF_MECAB_TWEET + 1)
     last_tweet = tweets[0].text
     indexes = tweets.map{ |tw|
       tw = delete_https(tw.text).gsub(/次は【\d+】/, '')
@@ -191,7 +193,7 @@ class Tweet
       md = t.match(/【(\d+)】/)
       md[1].to_i if md
     }.compact
-    timeline = @client.home_timeline(:count => 200)
+    timeline = @client.user_timeline(:count => 200)
     maxid = 0
     2.times do
       timeline.each do |tw|
@@ -199,7 +201,7 @@ class Tweet
         theme_numbers.delete(md[1].to_i) if md
         maxid = tw.id - 1
       end
-      timeline = @client.home_timeline(:count => 200, :max_id => maxid)
+      timeline = @client.user_timeline(:count => 200, :max_id => maxid)
     end
     theme_numbers.sample
   end
