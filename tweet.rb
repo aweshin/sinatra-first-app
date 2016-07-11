@@ -249,8 +249,8 @@ class Tweet
     loop do
       text = connect(dic)
       tweets = from_text_to_tweets(text)
-      if (ret = tweets[rand(tweets.size)]).length <= TWEET_LIMIT - 2
-        - END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG.length
+      if (ret = tweets[rand(tweets.size)]).length <= TWEET_LIMIT - 2 -
+        END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG.length
         return ret + ' #' + END_OF_MECAB_TWEET.sample + HASH_TAG
       end
     end
