@@ -73,15 +73,16 @@ class Tweet
       if delete_https(tweet)[-1] == END_OF_THEME
         tweet += '次は【' + next_theme.to_s + '】'
       end
+      media_indexes = WITH_MEDIA.map.with_index{ |t, i| i if tweet.include?(t) }.compact
+      unless media_indexes.empty?
       # メディアツイート
-      if media_indexes = WITH_MEDIA.map.with_index{ |t, i| i if tweet.include?(t) }.compact
         # 分割ツイート
         text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH)
         update(text) unless text.empty?
         # 最新ツイートがメディアのみの場合を考慮
         tweet = '《こちら》' if tweet.empty?
         media_ids = media_indexes.map{ |i| @client.upload(open('./media/' + MEDIA[i])) }
-        update(tweet, { media_ids : media_ids.join(',') } )
+        update(tweet, { media_ids => media_ids.join(',') } )
       else
         # 分割ツイート
         text, tweet = split_tweet(tweet)
@@ -161,7 +162,7 @@ class Tweet
       index = indexes[1]
     end
     # mecab_tweetの開始
-    return if index && last_tweet[-1] == '】'
+    return if last_tweet[-1] == '】'
 
     # 復帰
     unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
@@ -207,7 +208,8 @@ class Tweet
   def split_tweet(tweet, add_words_length = 0)
     text = ''
     while tweet.length > TWEET_LIMIT - add_words_length
-      text += tweet.slice!(0, tweet.index(/。|！|？|──?/) + 1)
+      index = tweet.index(/。|！|？|──?/)
+      index ? text += tweet.slice!(0, index + 1) : text += tweet.slice!(0..-1)
     end
     [text, tweet]
   end
