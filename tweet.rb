@@ -13,7 +13,7 @@ END_OF_THEME = '─'
 # MECAB_TWEETの連続数
 SEQUENCE_OF_MECAB_TWEET = 2
 
-SENTENCE_NO = [32..42, 44..45, 56..60, 62..68, 99..99, 106..106, 112..117, 139..-1]
+SENTENCE_NO = [18..42, 44..45, 56..60, 62..68, 99..99, 106..106, 112..117, 139..-1]
 # mecabツイートの語尾
 END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…',
                'パラレルワールドみたいな', 'ちょっとしたファンタジー',
@@ -31,7 +31,9 @@ WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'sublimate',
               'フランシス・ベーコン',
               '反転図形から反転図形',
-              'オパビニア']
+              'オパビニア',
+              'D.リンチ”Red Headed Party Doll”',
+              'F.ベーコン”Head IV”']
 MEDIA = ['gene_meme.png',
          'wingsuits.png',
          'arakawa_1.png',
@@ -41,7 +43,9 @@ MEDIA = ['gene_meme.png',
          'sublimate.png',
          'bacon.png',
          'reversible_fig.gif',
-         'ancient_creatures.jpg']
+         'ancient_creatures.jpg',
+         'lynch.png',
+         'bacon_2.png']
 
 class Tweet
   def initialize
@@ -70,13 +74,14 @@ class Tweet
         tweet += '次は【' + next_theme.to_s + '】'
       end
       # メディアツイート
-      if media_index = WITH_MEDIA.index{ |t| tweet.include?(t) }
+      if media_indexes = WITH_MEDIA.map.with_index{ |t, i| i if tweet.include?(t) }.compact
         # 分割ツイート
         text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH)
         update(text) unless text.empty?
         # 最新ツイートがメディアのみの場合を考慮
         tweet = '《こちら》' if tweet.empty?
-        update(tweet, open('./media/' + MEDIA[media_index]))
+        media_ids = media_indexes.map{ |i| @client.upload(open('./media/' + MEDIA[i])) }
+        update(tweet, { media_ids : media_ids.join(',') } )
       else
         # 分割ツイート
         text, tweet = split_tweet(tweet)
@@ -189,7 +194,7 @@ class Tweet
     maxid = 0
     2.times do
       timeline.each do |tw|
-        md = tw.text.match(/【(\d+)】/)
+        md = tw.text.slice(0, 6).match(/【(\d+)】/)
         theme_numbers.delete(md[1].to_i) if md
         maxid = tw.id - 1
       end
@@ -223,7 +228,7 @@ class Tweet
   # マルコフ連鎖用辞書の作成
   def make_dic(dic)
     @text.each do |t|
-      t.gsub!(/「.+?」。?|─.+?──?|【.+?】|『.+?』/, '')
+      t.gsub!(/「.+?」。?|─.+?──?|【.+?】|『.+?』|[.+?]/, '')
       t.gsub!(/「|」|（|）|"|“|”/, '')
     end
     nm = Natto::MeCab.new
