@@ -158,7 +158,7 @@ class Tweet
     return if last_tweet[-1] == '】'
 
     indexes = tweets.map{ |tw|
-      tw = delete_https(tw.text).gsub(/次は【\d+】/, '')
+      tw = delete_https(tw.text).gsub(/─?次は【\d+】/, '')
       @text.index{ |t| t.include?(tw) }
     }
     index = indexes[0]
