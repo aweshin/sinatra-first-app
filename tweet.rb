@@ -77,7 +77,7 @@ class Tweet
       unless media_indexes.empty?
       # メディアツイート
         # 分割ツイート
-        text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH)
+        text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH * media_indexes.size)
         update(text) unless text.empty?
         # 最新ツイートがメディアのみの場合を考慮
         tweet = '《こちら》' if tweet.empty?
@@ -175,7 +175,7 @@ class Tweet
   end
 
   def delete_https(tweet)
-    tweet.gsub(/\s?https?.+?──|\s?https?.+─?/, '')
+    tweet.gsub(/https?.+?。|https?.+/, '')
   end
 
   # 番号付けされたテーマの番号を直近のツイートから追跡
