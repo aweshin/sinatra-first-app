@@ -29,23 +29,25 @@ WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'この巨大な円筒形のなかに龍安寺の庭園が射影され造形されている。',
               'music bottles',
               'sublimate',
-              'フランシス・ベーコン',
+              'フランシス・ベーコンの絵画',
               '反転図形から反転図形',
               'オパビニア',
               'D.リンチ”Red Headed Party Doll”',
-              'F.ベーコン”Head IV”']
+              'F.ベーコン”Head IV”',
+              '多次元的球体である']
 MEDIA = ['gene_meme.png',
          'wingsuits.png',
          'arakawa_1.png',
          'nagi_1.png',
          'nagi_2.png',
-         'musicBottles.png',
+         'music_bottles.png',
          'sublimate.png',
-         'bacon.png',
+         'bacon_1.png',
          'reversible_fig.gif',
-         'ancient_creatures.jpg',
+         'ancient_creatures.png',
          'lynch.png',
-         'bacon_2.png']
+         'bacon_2.png',
+         'arakawa_2.png']
 
 class Tweet
   def initialize
@@ -82,6 +84,7 @@ class Tweet
         # 最新ツイートがメディアのみの場合を考慮
         tweet = '《こちら》' if tweet.empty?
         media_ids = media_indexes.map{ |i| @client.upload(open('./media/' + MEDIA[i])) }
+
         # media_idsは、media_idをstring型に変換。
         # 巨大数なので、json_decodeで「x.xxE+17」というような値に変換されてしまう
         update(tweet, { media_ids: media_ids.join(',') } )
@@ -220,7 +223,7 @@ class Tweet
   def update(tweet, media = nil)
     begin
       if media
-        @client.update_with_media(tweet, media)
+        @client.update(tweet, media)
       else
         @client.update(tweet)
       end
