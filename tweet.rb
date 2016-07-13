@@ -17,7 +17,7 @@ SENTENCE_NO = [18..42, 44..45, 56..60, 62..68, 99..99, 106..106, 112..117, 139..
 # mecabツイートの語尾
 END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…',
                'パラレルワールドみたいな', 'ちょっとしたファンタジー',
-               'ここから経験を立ち上げる', '…ああ',
+               'ここから経験を立ち上げる', 'ああ…',
                'じっと手を見る', 'ことばのカタルシス', 'ちょっと危険',
                'そっとささやく', "#{(rand(1..100) ** 2) / 100}点"]
 HASH_TAG = ' #ほぼ駄文ですが'
@@ -169,7 +169,7 @@ class Tweet
 
     # 復帰
     unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
-      index = @text.index{ |t| t.include?(find_number(tweets)) } - 1
+      index = @text.map{ |t| t[0, 6] }.index{ |t| t.include?(find_number(tweets)) } - 1
     end
     index
   end
