@@ -20,7 +20,7 @@ END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…'
                'ここから経験を立ち上げる', 'ああ…',
                'じっと手を見る', 'ことばのカタルシス', 'ちょっと危険',
                'そっとささやく', "#{(rand(1..100) ** 2) / 100}点"]
-HASH_TAG = ' #ほぼ駄文ですが'
+HASH_TAG = '#ほぼ駄文ですが'
 # メディアツイート
 WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'Wingsuits',
@@ -178,7 +178,7 @@ class Tweet
   end
 
   def delete_https(tweet)
-    tweet.gsub(/https?.+?。|https?.+/, '')
+    tweet.gsub(/\s?https?.+?。|\s?https?.+/, '')
   end
 
   # 番号付けされたテーマの番号を直近のツイートから追跡
@@ -222,11 +222,7 @@ class Tweet
 
   def update(tweet, media = nil)
     begin
-      if media
-        @client.update(tweet, media)
-      else
-        @client.update(tweet)
-      end
+      media ? @client.update(tweet, media) : @client.update(tweet)
     rescue => e
       STDERR.puts "[EXCEPTION] " + e.to_s
       exit 1
@@ -261,9 +257,9 @@ class Tweet
     loop do
       text = connect(dic)
       tweets = from_text_to_tweets(text)
-      if (ret = tweets[rand(tweets.size)]).length <= TWEET_LIMIT - 2 -
+      if (ret = tweets[rand(tweets.size)]).length <= TWEET_LIMIT - 3 -
         END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG.length
-        return ret + ' #' + END_OF_MECAB_TWEET.sample + HASH_TAG
+        return ret + "\n" + '#' + END_OF_MECAB_TWEET.sample + "\n" + HASH_TAG
       end
     end
   end
