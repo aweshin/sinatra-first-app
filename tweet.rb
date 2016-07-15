@@ -80,7 +80,7 @@ class Tweet
       # メディアツイート
         # 分割ツイート
         text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH * media_indexes.size)
-        update(text) unless text.empty?
+        update(text)
         # 最新ツイートがメディアのみの場合を考慮
         tweet = '《こちら》' if tweet.empty?
         media_ids = media_indexes.map{ |i| @client.upload(open('./media/' + MEDIA[i])) }
@@ -91,8 +91,8 @@ class Tweet
       else
         # 分割ツイート
         text, tweet = split_tweet(tweet)
-        update(text) unless text.empty?
-        update(tweet)
+        update(text)
+        update(tweet) unless tweet.empty?
       end
     else
       random_tweet_using_mecab
@@ -178,7 +178,7 @@ class Tweet
   end
 
   def delete_https(tweet)
-    tweet.gsub(/\s?https?.+?。|\s?https?.+/, '')
+    tweet.gsub(/\s?https?.+?[\n\s　]|\s?https?.+/, '')
   end
 
   # 番号付けされたテーマの番号を直近のツイートから追跡
@@ -219,9 +219,9 @@ class Tweet
       index = tweet.index(/。|！|？|──?/) || tweet.length - 1
       break if index == -1
       add_text = tweet.slice!(0, index + 1)
-      http_tweets = add_text.scan(/https?.+?[\n\s　]/)
+      http_tweets = add_text.scan(/https?.+?[\n\s　]|https?.+/)
       http_tweets_count = http_tweets.size
-      http_tweets_length = http_tweets.reduce(0){ |s, t| s + t.length }
+      http_tweets_length = http_tweets.reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
       text_length += index + 1 + MEDIA_URL_LENGTH * http_tweets_count - http_tweets_length
       text += add_text
     end
