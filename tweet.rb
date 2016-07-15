@@ -28,7 +28,7 @@ WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               '奈義町の山並みを背景として、突如斜めになった巨大な円筒が出現する。',
               'この巨大な円筒形のなかに龍安寺の庭園が射影され造形されている。',
               'music bottles',
-              'sublimate',
+              'Sublimate',
               'フランシス・ベーコンの絵画',
               '反転図形から反転図形',
               'オパビニア',
@@ -213,9 +213,17 @@ class Tweet
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
   def split_tweet(tweet, add_words_length = 0)
     text = ''
-    while tweet.length > TWEET_LIMIT - add_words_length
-      index = tweet.index(/。|！|？|──?/)
-      index ? text += tweet.slice!(0, index + 1) : text += tweet.slice!(0..-1)
+    # httpを含むツイートは、一つにつき一括24文字でカウント
+    text_length = 0
+    while text_length <= TWEET_LIMIT - add_words_length
+      index = tweet.index(/。|！|？|──?/) || tweet.length - 1
+      break if index == -1
+      add_text = tweet.slice!(0, index + 1)
+      http_tweets = add_text.scan(/https?.+?[\n\s　]/)
+      http_tweets_count = http_tweets.size
+      http_tweets_length = http_tweets.reduce(0){ |s, t| s + t.length }
+      text_length += index + 1 + MEDIA_URL_LENGTH * http_tweets_count - http_tweets_length
+      text += add_text
     end
     [text, tweet]
   end
