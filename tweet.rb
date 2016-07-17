@@ -215,9 +215,9 @@ class Tweet
     text = ''
     # httpを含むツイートは、一つにつき一括24文字でカウント
     text_length = 0
-    while text_length <= TWEET_LIMIT - add_words_length
+    loop do
       index = tweet.index(/。|！|？|──?/) || tweet.length - 1
-      break if index == -1
+      break if index == -1 || text_length + index + 1 > TWEET_LIMIT - add_words_length
       add_text = tweet.slice!(0, index + 1)
       http_tweets = add_text.scan(/https?.+?[\n\s　]|https?.+/)
       http_tweets_count = http_tweets.size
