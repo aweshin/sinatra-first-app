@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'twitter'
 require 'natto'
-
+require 'aws-sdk-core'
 # 文字数制限140字
 TWEET_LIMIT = 140
 # メディアツイートの短縮URL
@@ -78,12 +78,21 @@ class Tweet
       media_indexes = WITH_MEDIA.map.with_index{ |t, i| i if tweet.include?(t) }.compact
       unless media_indexes.empty?
       # メディアツイート
+        # AWS
+        s3 = Aws::S3::Client.new
+        media_indexes.each_with_index do |index, i|
+          File.open(File.basename("hoge_#{i}.png"), 'w') do |file|
+            s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{MEDIA[index]}") do |data|
+              file.write(data)
+            end
+          end
+        end
         # 分割ツイート
         text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH * media_indexes.size)
         update(text)
         # 最新ツイートがメディアのみの場合を考慮
         tweet = '《こちら》' if tweet.empty?
-        media_ids = media_indexes.map{ |i| @client.upload(open('./media/' + MEDIA[i])) }
+        media_ids = (0...media_indexes.size).map{ |i| @client.upload(open("hoge_#{i}.png")) }
 
         # media_idsは、media_idをstring型に変換。
         # 巨大数なので、json_decodeで「x.xxE+17」というような値に変換されてしまう
