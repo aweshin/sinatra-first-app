@@ -6,6 +6,8 @@ require 'aws-sdk-core'
 TWEET_LIMIT = 140
 # メディアツイートの短縮URL
 MEDIA_URL_LENGTH = 24
+# 通常のURLの短縮盤
+URL_LENGTH = 23
 # 重複ツイートのupload間隔(12時間)
 INTERVAL = 12
 # テーマの終了記号
@@ -232,19 +234,24 @@ class Tweet
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
   def split_tweet(tweet, add_words_length = 0)
     text = ''
-    # httpを含むツイートは、一つにつき一括24文字でカウント
+    # httpを含むツイートは、一つにつき一括23文字でカウント
     text_length = 0
     loop do
       index = tweet.index(/。|！|？|──?/) || tweet.length - 1
-      break if index == -1 || text_length + index + 1 > TWEET_LIMIT - add_words_length
+      break if index == -1
       add_text = tweet.slice!(0, index + 1)
-      http_tweets = add_text.scan(/https?.+?[\n\s　]|https?.+/)
-      http_tweets_count = http_tweets.size
-      http_tweets_length = http_tweets.reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
-      text_length += index + 1 + MEDIA_URL_LENGTH * http_tweets_count - http_tweets_length
+      text_length += index + 1 + count_real_length(add_text)
+      break if text_length > TWEET_LIMIT - add_words_length
       text += add_text
     end
     text.empty? [tweet, text] : [text, tweet]
+  end
+
+  def count_real_length(text)
+    http_tweets = text.scan(/https?.+?[\n\s　]|https?.+/)
+    http_tweets_count = http_tweets.size
+    http_tweets_length = http_tweets.reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
+    URL_LENGTH * http_tweets_count - http_tweets_length
   end
 
   def update(tweet, media = nil)
