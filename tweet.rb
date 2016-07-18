@@ -6,7 +6,7 @@ require 'aws-sdk-core'
 TWEET_LIMIT = 140
 # メディアツイートの短縮URL
 MEDIA_URL_LENGTH = 24
-# 通常のURLの短縮盤
+# 通常のURLの短縮版
 URL_LENGTH = 23
 # 重複ツイートのupload間隔(12時間)
 INTERVAL = 12
@@ -228,13 +228,13 @@ class Tweet
       else
         update(t1, { media_ids: media_ids.join(',') } )
         update(t2)
+      end
     end
   end
 
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
   def split_tweet(tweet, add_words_length = 0)
     text = ''
-    # httpを含むツイートは、一つにつき一括23文字でカウント
     text_length = 0
     loop do
       index = tweet.index(/。|！|？|──?/) || tweet.length - 1
@@ -244,7 +244,7 @@ class Tweet
       break if text_length > TWEET_LIMIT - add_words_length
       text += add_text
     end
-    text.empty? [tweet, text] : [text, tweet]
+    text.empty? ? [tweet, text] : [text, tweet]
   end
 
   def count_real_length(text)
