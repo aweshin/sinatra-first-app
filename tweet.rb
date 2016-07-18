@@ -132,7 +132,7 @@ class Tweet
     ret = [text.shift]
     text.each do |t|
       # 前の文章が句読点で終わっていない、かつ、次の文章を足しても文字数が超過しなければ
-      if is_words?(ret.last) && ret.last.length + t.length <= TWEET_LIMIT
+      if is_words?(ret.last) && ret.last.length + t.length + 1 <= TWEET_LIMIT
         ret[-1] += "\n" + t
       else
         ret << t
@@ -239,10 +239,9 @@ class Tweet
     loop do
       index = tweet.index(/。|！|？|──?/) || tweet.length - 1
       break if index == -1
-      add_text = tweet.slice!(0, index + 1)
-      text_length += index + 1 + count_real_length(add_text)
+      text_length += index + 1 + count_real_length(tweet.slice(0, index + 1))
       break if text_length > TWEET_LIMIT - add_words_length
-      text += add_text
+      text += tweet.slice!(0, index + 1)
     end
     text.empty? ? [tweet, text] : [text, tweet]
   end
