@@ -77,26 +77,7 @@ class Tweet
       end
       media_indexes = WITH_MEDIA.map.with_index{ |t, i| i if tweet.include?(t) }.compact
       unless media_indexes.empty?
-      # メディアツイート
-        # AWS
-        s3 = Aws::S3::Client.new
-        media_indexes.each_with_index do |index, i|
-          File.open(File.basename("hoge_#{i}.png"), 'w') do |file|
-            s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{MEDIA[index]}") do |data|
-              file.write(data)
-            end
-          end
-        end
-        # 分割ツイート
-        text, tweet = split_tweet(tweet, MEDIA_URL_LENGTH * media_indexes.size)
-        update(text)
-        # 最新ツイートがメディアのみの場合を考慮
-        tweet = '《こちら》' if tweet.empty?
-        media_ids = (0...media_indexes.size).map{ |i| @client.upload(open("hoge_#{i}.png")) }
-
-        # media_idsは、media_idをstring型に変換。
-        # 巨大数なので、json_decodeで「x.xxE+17」というような値に変換されてしまう
-        update(tweet, { media_ids: media_ids.join(',') } )
+        media_tweet(media_indexes, media_indexes.size, tweet)
       else
         # 分割ツイート
         text, tweet = split_tweet(tweet)
@@ -175,7 +156,7 @@ class Tweet
     }
     index = indexes[0]
     # メディアツイートを考慮
-    if delete_https(last_tweet) == '《こちら》'
+    if delete_https(last_tweet).empty?
       index = indexes[1]
     end
 
@@ -219,6 +200,35 @@ class Tweet
     theme_numbers.sample
   end
 
+  def media_tweet(media_indexes, n, tweet)
+    # AWS
+    s3 = Aws::S3::Client.new
+    media_indexes.each_with_index do |index, i|
+      File.open(File.basename("hoge_#{i}.png"), 'w') do |file|
+        s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{MEDIA[index]}") do |data|
+          file.write(data)
+        end
+      end
+    end
+    # 分割ツイート
+    t1, t2 = split_tweet(tweet, MEDIA_URL_LENGTH * n)
+
+    media_ids = (0...n).map{ |i| @client.upload(open("hoge_#{i}.png")) }
+
+    if t1.length + MEDIA_URL_LENGTH * n <= TWEET_LIMIT
+      # media_idsは、media_idをstring型に変換。
+      # 巨大数なので、json_decodeで「x.xxE+17」というような値に変換されてしまう
+      update(t1, { media_ids: media_ids.join(',') } )
+    else
+      if t2.empty?
+        update(t1)
+        update(t2, { media_ids: media_ids.join(',') } )
+      else
+        update(t1, { media_ids: media_ids.join(',') } )
+        update(t2)
+    end
+  end
+
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
   def split_tweet(tweet, add_words_length = 0)
     text = ''
@@ -234,7 +244,7 @@ class Tweet
       text_length += index + 1 + MEDIA_URL_LENGTH * http_tweets_count - http_tweets_length
       text += add_text
     end
-    [text, tweet]
+    text.empty? [tweet, text] : [text, tweet]
   end
 
   def update(tweet, media = nil)
