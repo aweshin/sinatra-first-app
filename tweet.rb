@@ -36,7 +36,10 @@ WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
               'オパビニア',
               'D.リンチ”Red Headed Party Doll”',
               'F.ベーコン”Head IV”',
-              '多次元的球体である']
+              '多次元的球体である',
+              '学習Ⅲへの旅',
+              '学習Ⅲへの旅',
+              '学習Ⅲへの旅']
 MEDIA = ['gene_meme.png',
          'wingsuits.png',
          'arakawa_1.png',
@@ -49,7 +52,10 @@ MEDIA = ['gene_meme.png',
          'ancient_creatures.png',
          'lynch.png',
          'bacon_2.png',
-         'arakawa_2.png']
+         'arakawa_2.png',
+         'bateson_1.png',
+         'bateson_2.png',
+         'bateson_3.png']
 
 class Tweet
   def initialize
@@ -184,12 +190,12 @@ class Tweet
 
   # 新しいテーマを決める
   def next_theme
-    # 最新520件にツイートされていないテーマを選ぶ
+    # 最新500件にツイートされていないテーマを選ぶ
     theme_numbers = @text.map{ |t|
       md = t.match(/【(\d+)】/)
       md[1].to_i if md
     }.compact
-    timeline = @client.user_timeline(count: 120)
+    timeline = @client.user_timeline(count: 100)
     maxid = 0
     3.times do
       timeline.each do |tw|
