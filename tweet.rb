@@ -184,14 +184,14 @@ class Tweet
 
   # 新しいテーマを決める
   def next_theme
-    # 最新400件にツイートされていないテーマを選ぶ
+    # 最新520件にツイートされていないテーマを選ぶ
     theme_numbers = @text.map{ |t|
       md = t.match(/【(\d+)】/)
       md[1].to_i if md
     }.compact
-    timeline = @client.user_timeline(count: 200)
+    timeline = @client.user_timeline(count: 120)
     maxid = 0
-    2.times do
+    3.times do
       timeline.each do |tw|
         md = tw.text.slice(0, 6).match(/【(\d+)】/)
         theme_numbers.delete(md[1].to_i) if md
@@ -221,14 +221,10 @@ class Tweet
       # media_idsは、media_idをstring型に変換。
       # 巨大数なので、json_decodeで「x.xxE+17」というような値に変換されてしまう
       update(t1, { media_ids: media_ids.join(',') } )
+      update(t2) unless t2.empty?
     else
-      if t2.empty?
-        update(t1)
-        update(t2, { media_ids: media_ids.join(',') } )
-      else
-        update(t1, { media_ids: media_ids.join(',') } )
-        update(t2)
-      end
+      update(t1)
+      update(t2, { media_ids: media_ids.join(',') } )
     end
   end
 
