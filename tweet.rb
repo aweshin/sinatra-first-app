@@ -155,6 +155,7 @@ class Tweet
   def last_tweet_index
     tweets = @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET + 1)
     last_tweet = tweets[0].text
+    p last_tweet
     # mecab_tweetの開始
     return if last_tweet[-1] == '】'
 
