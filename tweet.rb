@@ -190,12 +190,12 @@ class Tweet
 
   # 新しいテーマを決める
   def next_theme
-    # 最新500件にツイートされていないテーマを選ぶ
+    # 最新450件にツイートされていないテーマを選ぶ
     theme_numbers = @text.map{ |t|
       md = t.match(/【(\d+)】/)
       md[1].to_i if md
     }.compact
-    timeline = @client.user_timeline(count: 100)
+    timeline = @client.user_timeline(count: 50)
     maxid = 0
     3.times do
       timeline.each do |tw|
