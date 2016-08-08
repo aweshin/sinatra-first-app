@@ -156,7 +156,7 @@ class Tweet
     tweets = @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET + 1)
     last_tweet = tweets[0].text
     # mecab_tweetの開始
-    return if last_tweet[-1] == '】'
+    return if delete_https(last_tweet)[-1] == '】'
 
     indexes = tweets.map{ |tw|
       tw = delete_https(tw.text).gsub(/─?次は【\d+】/, '')
