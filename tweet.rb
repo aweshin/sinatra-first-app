@@ -2,6 +2,7 @@ require 'rubygems'
 require 'twitter'
 require 'natto'
 require 'aws-sdk-core'
+require './models/sentence.rb'
 # 文字数制限140字
 TWEET_LIMIT = 140
 # メディアツイートの短縮URL
@@ -15,7 +16,7 @@ END_OF_THEME = '─'
 # MECAB_TWEETの連続数
 SEQUENCE_OF_MECAB_TWEET = 2
 
-SENTENCE_NO = [18..42, 44..45, 56..60, 62..68, 99..99, 106..106, 112..117, 139..-1]
+SENTENCE_NO = [17..41, 43..44, 55..59, 61..67, 98..98, 105..105, 111..116, 138..-1]
 # mecabツイートの語尾
 END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…',
                'パラレルワールドみたいな', 'ちょっとしたファンタジー',
@@ -59,11 +60,10 @@ MEDIA = ['gene_meme.png',
 
 class Tweet
   def initialize
-    sentences = File.open('./sentences.txt').read.split("\n")
-
+    @sentences = Sentence.order("id desc").all
     text = []
     SENTENCE_NO.each do |i|
-      text += sentences[i]
+      text += @sentences.reverse.to_a[i].map(&:sentence)
     end
     @text = join_text(text.flat_map{ |t| from_text_to_tweets(t) })
 
@@ -110,7 +110,6 @@ class Tweet
 
   # TWEET_LIMIT以内で文章を切る。
   def from_text_to_tweets(text)
-    text.slice!(text.rindex(/（/)..-1) if text[-1] == '）'
     # 句点（に準ずるもの）で終了していれば
     if text[-1].match(/。|！|？|─/)
       return slice_text(text)

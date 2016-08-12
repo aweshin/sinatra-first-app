@@ -1,15 +1,20 @@
 require 'rubygems'
 require 'sinatra'
 require 'sinatra/reloader'
+require 'active_record'
+require './models/sentence.rb'
 require_relative 'tweet.rb'
+
 get '/' do
-  'under construction'
+  @sentences = Sentence.order("id desc").all
+  erb :index
 end
 
-get '/normal_tweet' do
-  Tweet.new.normal_tweet
+post '/new' do
+  Sentence.create({sentence: params[:sentence]})
+  redirect '/'
 end
 
-# get '/random_tweet_using_mecab' do
-#   Tweet.new.random_tweet_using_mecab
-# end
+post '/delete' do
+  Sentence.find(params[:id]).destroy
+end
