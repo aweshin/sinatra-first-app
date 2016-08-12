@@ -1,5 +1,5 @@
 require_relative  'app.rb'
-require 'active_record'
+require './app'
 
 use ActiveRecord::ConnectionAdapters::ConnectionManagement
 
