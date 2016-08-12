@@ -6,7 +6,7 @@ gem 'sinatra-contrib'
 gem 'natto'
 gem 'mecab', '0.996'
 gem 'aws-sdk'
-gem 'activerecord', '< 5.0.0'
+gem 'activerecord'
 gem 'sinatra-activerecord'
 
 gem 'sqlite3', group: :development

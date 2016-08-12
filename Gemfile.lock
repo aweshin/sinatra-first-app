@@ -79,7 +79,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activerecord (< 5.0.0)
+  activerecord
   aws-sdk
   mecab (= 0.996)
   natto
