@@ -8,4 +8,7 @@ gem 'mecab', '0.996'
 gem 'aws-sdk'
 gem 'activerecord'
 gem 'sinatra-activerecord'
-gem 'sqlite3', '1.3.11'
+
+gem 'sqlite3', group: :development
+# 本番ではpostgressを使用する
+gem 'pg', group: :production
