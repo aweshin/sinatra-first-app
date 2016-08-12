@@ -95,9 +95,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activemodel
   activerecord
-  activesupport
   aws-sdk
   mecab (= 0.996)
   natto
