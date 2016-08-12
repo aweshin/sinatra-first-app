@@ -8,6 +8,7 @@ gem 'mecab', '0.996'
 gem 'aws-sdk'
 gem 'activerecord'
 gem 'activesupport'
+gem 'activemodel'
 gem 'sinatra-activerecord'
 
 gem 'sqlite3', group: :development
