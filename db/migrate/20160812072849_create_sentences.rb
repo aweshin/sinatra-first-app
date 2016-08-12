@@ -1,6 +1,6 @@
 class CreateSentences < ActiveRecord::Migration
   def change
-    create_table :text do |t|
+    create_table :sentences do |t|
       t.string :sentence
     end
   end

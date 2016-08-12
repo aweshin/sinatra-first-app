@@ -1,9 +1,7 @@
 require 'active_record'
 # データベースへの接続
-ActiveRecord::Base.establish_connection(
-  ENV['DATABASE_URL'] || 'sqlite3://localhost/sentence.db'
-)
+ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'])
 
 
-class Text < ActiveRecord::Base
+class Sentence < ActiveRecord::Base
 end
