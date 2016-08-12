@@ -1,19 +1,21 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (5.0.0.1)
-      activesupport (= 5.0.0.1)
-    activerecord (5.0.0.1)
-      activemodel (= 5.0.0.1)
-      activesupport (= 5.0.0.1)
-      arel (~> 7.0)
-    activesupport (5.0.0.1)
-      concurrent-ruby (~> 1.0, >= 1.0.2)
+    activemodel (4.2.7.1)
+      activesupport (= 4.2.7.1)
+      builder (~> 3.1)
+    activerecord (4.2.7.1)
+      activemodel (= 4.2.7.1)
+      activesupport (= 4.2.7.1)
+      arel (~> 6.0)
+    activesupport (4.2.7.1)
       i18n (~> 0.7)
+      json (~> 1.7, >= 1.7.7)
       minitest (~> 5.1)
+      thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
     addressable (2.4.0)
-    arel (7.1.1)
+    arel (6.0.3)
     aws-sdk (2.5.3)
       aws-sdk-resources (= 2.5.3)
     aws-sdk-core (2.5.3)
@@ -22,7 +24,7 @@ GEM
       aws-sdk-core (= 2.5.3)
     backports (3.6.8)
     buftok (0.2.0)
-    concurrent-ruby (1.0.2)
+    builder (3.2.2)
     domain_name (0.5.20160615)
       unf (>= 0.0.5, < 1.0.0)
     equalizer (0.0.10)
@@ -95,7 +97,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activerecord
+  activerecord (< 5.0.0)
   aws-sdk
   mecab (= 0.996)
   natto
