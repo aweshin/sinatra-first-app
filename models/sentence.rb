@@ -5,5 +5,5 @@ ActiveRecord::Base.establish_connection(
 )
 
 
-class Sentence < ActiveRecord::Base
+class Text < ActiveRecord::Base
 end
