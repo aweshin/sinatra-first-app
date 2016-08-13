@@ -18,3 +18,7 @@ end
 post '/delete' do
   Sentence.find(params[:id]).destroy
 end
+
+get '/normal_tweet' do
+  Tweet.new.normal_tweet
+end
