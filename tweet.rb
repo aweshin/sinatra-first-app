@@ -60,12 +60,13 @@ MEDIA = ['gene_meme.png',
 
 class Tweet
   def initialize
-    @sentences = Sentence.order("id desc").all
-    text = []
+    @sentences = Sentence.all
+
+    pick_up = []
     SENTENCE_NO.each do |i|
-      text += @sentences.reverse.to_a[i].map(&:sentence)
+      pick_up += @sentences.to_a[i].map(&:sentence)
     end
-    @text = join_text(text.flat_map{ |t| from_text_to_tweets(t) })
+    @text = join_text(pick_up.flat_map{ |t| from_text_to_tweets(t) })
 
     @client = Twitter::REST::Client.new(
       consumer_key:        ENV['TWITTER_CONSUMER_KEY'],
