@@ -28,10 +28,10 @@ HASH_TAG = '#ほぼ駄文ですが'
 
 class Tweet
   def initialize
-    @texts = Text.all
+    @texts = Text.all.map(&:text)
     @medias = MediaTweet.all
     @theme_numbers = Theme.where(open: true).map(&:theme_id)
-    @current_id = Theme.where.not(current_text_id: nil).current_text_id
+    @current_id = Theme.find_by_sql("SELECT current_text_id FROM themes WHERE current_text_id > 0").map(&:current_text_id)[0]
     @recent_tweets_count = @texts.size * 9 / 10
 
     @client = Twitter::REST::Client.new(
@@ -52,14 +52,14 @@ class Tweet
         tweet += '次は【' + theme_no.to_s + '】'
         # データの更新
         func =
-          ->{ @texts.each_with_index { |text, i| return i + 1 if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no} }
+          ->{ @texts.each_with_index { |text, i| return i + 1 if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no } }
         target_theme = Theme.find_by.not(current_text_id: nil).update(current_text_id: nil)
         Theme.find_by(theme_id: theme_no).update(current_text_id: func.call)
 
       end
-      cur_text = @texts.find(index)
+      cur_text = Text.find(index)
       if cur_text.media
-        media_tweet(@medias.where(text_id: index).map(&:media), tweet)
+        media_tweet(@medias.where(tweet_id: index).map(&:media), tweet)
       else
         # 分割ツイート
         text, tweet = split_tweet(tweet)
@@ -73,7 +73,7 @@ class Tweet
 
   # 形態素解析して作文する
   def random_tweet_using_mecab
-    @texts.to_a.shuffle!
+    @texts.shuffle!
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     tweet = choice_sentence(dic)
@@ -140,7 +140,7 @@ class Tweet
       # 復帰
       return @current_id
     else
-      Theme.find_by.not(current_text_id: nil).update(current_text_id: @current_id + 1)
+      Theme.find_by("current_text_id > 0").update(current_text_id: @current_id + 1)
       return @current_id + 1
     end
   end
@@ -172,7 +172,7 @@ class Tweet
     s3 = Aws::S3::Client.new
     medias.each_with_index do |media, i|
       File.open(File.basename("hoge_#{i}.png"), 'w') do |file|
-        s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: media) do |data|
+        s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{media}") do |data|
           file.write(data)
         end
       end
@@ -227,13 +227,13 @@ class Tweet
 
   # マルコフ連鎖用辞書の作成
   def make_dic(dic)
-    @texts.map(&:text).each do |t|
+    @texts.each do |t|
       t.gsub!(/「.+?」。?|─.+?──?|【.+?】|『.+?』|[.+?]/, '')
       t.gsub!(/「|」|（|）|"|“|”/, '')
     end
     nm = Natto::MeCab.new
     data = ['BEGIN','BEGIN']
-    @texts.map(&:text).each do |t|
+    @texts.each do |t|
       nm.parse(t) do |a|
         if a.surface != nil
           data << a.surface
