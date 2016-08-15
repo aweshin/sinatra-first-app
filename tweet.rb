@@ -51,8 +51,10 @@ class Tweet
         func =
           -> { @texts.each_with_index { |text, i|
             return i + 1 if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no } }
-        target_theme = Theme.find_by.not(current_text_id: nil).update(current_text_id: nil)
+        target_theme = Theme.find_by("current_text_id > 0").update(current_text_id: nil)
         Theme.find_by(theme_id: theme_no).update(current_text_id: func.call)
+      else
+        Theme.find_by("current_text_id > 0").update(current_text_id: index + 1)
       end
 
       cur_text = Text.find(index)
@@ -136,8 +138,7 @@ class Tweet
       # mecab_tweet
       return
     else
-      Theme.find_by("current_text_id > 0").update(current_text_id: current_id + 1)
-      return current_id + 1
+      return current_id
     end
   end
 
