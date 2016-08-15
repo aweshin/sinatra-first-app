@@ -1,6 +1,4 @@
-/vendor/bundle
-/.DS_Store
-/.env
-init.rb
-/db/sentence.db
-/views
+vendor/bundle
+.DS_Store
+.env
+db/sentence.db

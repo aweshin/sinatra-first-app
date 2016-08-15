@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>tweets</title>
+</head>
+<body>
+    <h1>SENTENCES</h1>
+    <h2>メディアツイート</h2>
+    <form method="post" action="/media">
+        文言<input type="text" name="with_media">
+        ファイル名<input type="text" name="media"> <input type="submit" value="post">
+    </form>
+    <h2>公開テーマ</h2>
+    <% @themes.each do |theme| %>
+        <%= theme.theme_id if theme.open %>
+    <% end %>
+    <h2>Current Theme_id </h2>
+    <form method="post" action="/theme">
+        <input type="text" name="theme_id">
+        公開する
+        <input type="radio" name="open"> <input type="submit" value="post">
+    </form>
+    <h2>Add New</h2>
+    <form method="post" action="/new">
+        <input type="text" name="sentence"> <input type="submit" value="post">
+    </form>
+    <ul>
+        <%= @sentences.size %>
+        <% @sentences.each do |body| %>
+        <li data-id="<%= body.id %>">
+            <%= body.sentence %>
+            <span class="deleteCmd" style="cursor:pointer;color:blue">[x]</span>
+        </li>
+        <% end %>
+    </ul>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script>
+        $('.deleteCmd').click(function() {
+            var el = $(this).parent();
+            if (confirm('are you sure to delete?')) {
+                $.post('/delete', {
+                    id: el.data('id')
+                }, function() {
+                    el.fadeOut(800);
+                });
+            }
+        })
+    </script>
+</body>
+</html>
