@@ -29,10 +29,6 @@ HASH_TAG = '#ほぼ駄文ですが'
 class Tweet
   def initialize
     @texts = Text.all.map(&:text)
-    @medias = MediaTweet.all
-    @theme_numbers = Theme.where(open: true).map(&:theme_id)
-    @current_id = Theme.find_by_sql("SELECT current_text_id FROM themes WHERE current_text_id > 0").map(&:current_text_id)[0]
-    @recent_tweets_count = @texts.size * 9 / 10
 
     @client = Twitter::REST::Client.new(
       consumer_key:        ENV['TWITTER_CONSUMER_KEY'],
@@ -46,20 +42,22 @@ class Tweet
     if index = next_tweet_index
       tweet = Text.find(index).text
       text = ''
+
       # テーマの終わり
       if delete_https(tweet)[-1] == END_OF_THEME
-        theme_no = next_theme
+        theme_no = choose_next_theme
         tweet += '次は【' + theme_no.to_s + '】'
         # データの更新
         func =
-          ->{ @texts.each_with_index { |text, i| return i + 1 if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no } }
+          -> { @texts.each_with_index { |text, i|
+            return i + 1 if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no } }
         target_theme = Theme.find_by.not(current_text_id: nil).update(current_text_id: nil)
         Theme.find_by(theme_id: theme_no).update(current_text_id: func.call)
-
       end
+
       cur_text = Text.find(index)
       if cur_text.media
-        media_tweet(@medias.where(tweet_id: index).map(&:media), tweet)
+        media_tweet(MediaTweet.where(tweet_id: index).map(&:media), tweet)
       else
         # 分割ツイート
         text, tweet = split_tweet(tweet)
@@ -76,7 +74,7 @@ class Tweet
     @texts.shuffle!
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
-    tweet = choice_sentence(dic)
+    tweet = choose_sentence(dic)
     update(tweet)
   end
 
@@ -135,13 +133,15 @@ class Tweet
       tw = delete_https(tw.text).gsub(/─?次は【\d+】/, '')
       @texts.index{ |t| t.include?(tw) }
     }
+    current_id =
+      Theme.find_by_sql("SELECT current_text_id FROM themes WHERE current_text_id > 0").map(&:current_text_id)[0]
 
     unless indexes.any?
       # 復帰
-      return @current_id
+      return current_id
     else
-      Theme.find_by("current_text_id > 0").update(current_text_id: @current_id + 1)
-      return @current_id + 1
+      Theme.find_by("current_text_id > 0").update(current_text_id: current_id + 1)
+      return current_id + 1
     end
   end
 
@@ -150,16 +150,18 @@ class Tweet
   end
 
   # 新しいテーマを決める
-  def next_theme
-    # 最新RECENT_TWEET_COUNT件にツイートされていないテーマを選ぶ
-    repeat, start = @recent_tweets_count.divmod(200)
-    
+  def choose_next_theme
+    # 同じテーマを近づけてツイートしない
+    recent_tweets_count = @texts.size * 9 / 10
+    # 最新recent_tweets_count件にツイートされていないテーマを選ぶ
+    repeat, start = recent_tweets_count.divmod(200)
+    theme_numbers = Theme.where(open: true).map(&:theme_id)
     timeline = @client.user_timeline(count: start)
     maxid = 0
     repeat.times do
       timeline.each do |tw|
         md = tw.text.slice(0, 6).match(/【(\d+)】/)
-        @theme_numbers.delete(md[1].to_i) if md
+        theme_numbers.delete(md[1].to_i) if md
         maxid = tw.id - 1
       end
       timeline = @client.user_timeline(count: 200, max_id: maxid)
@@ -249,7 +251,7 @@ class Tweet
   end
 
   # 辞書を元に作文を行う。文字数制限を加味する。
-  def choice_sentence(dic)
+  def choose_sentence(dic)
     loop do
       text = connect(dic)
       tweets = from_text_to_tweets(text)
