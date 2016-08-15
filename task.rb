@@ -1,2 +1,2 @@
-require_relative 'tweet.rb'
+require './tweet.rb'
 Tweet.new.normal_tweet

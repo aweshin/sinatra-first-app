@@ -1,5 +1,6 @@
 /vendor/bundle
 /.DS_Store
 /.env
+init.rb
+/db/sentence.db
 /views
-sentences.csv

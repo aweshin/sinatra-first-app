@@ -2,7 +2,9 @@ require 'rubygems'
 require 'twitter'
 require 'natto'
 require 'aws-sdk-core'
-require './models/sentence.rb'
+require './models/text.rb'
+require './models/media_tweet.rb'
+require './models/theme.rb'
 # 文字数制限140字
 TWEET_LIMIT = 140
 # メディアツイートの短縮URL
@@ -16,7 +18,6 @@ END_OF_THEME = '─'
 # MECAB_TWEETの連続数
 SEQUENCE_OF_MECAB_TWEET = 2
 
-SENTENCE_NO = [17..41, 43..44, 55..59, 61..67, 98..98, 105..105, 111..116, 138..-1]
 # mecabツイートの語尾
 END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…',
                'パラレルワールドみたいな', 'ちょっとしたファンタジー',
@@ -24,49 +25,14 @@ END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…'
                'じっと手を見る', 'ことばのカタルシス', 'ちょっと危険',
                'そっとささやく', "#{(rand(1..100) ** 2) / 100}点"]
 HASH_TAG = '#ほぼ駄文ですが'
-# メディアツイート
-WITH_MEDIA = ['遺伝の世界とミームの世界の対応表',
-              'Wingsuits',
-              '『意味のメカニズム』のなかで荒川が複数回使用しているものに',
-              '奈義町の山並みを背景として、突如斜めになった巨大な円筒が出現する。',
-              'この巨大な円筒形のなかに龍安寺の庭園が射影され造形されている。',
-              'music bottles',
-              'Sublimate',
-              'フランシス・ベーコンの絵画',
-              '反転図形から反転図形',
-              'オパビニア',
-              'D.リンチ”Red Headed Party Doll”',
-              'F.ベーコン”Head IV”',
-              '多次元的球体である',
-              '学習Ⅲへの旅',
-              '学習Ⅲへの旅',
-              '学習Ⅲへの旅']
-MEDIA = ['gene_meme.png',
-         'wingsuits.png',
-         'arakawa_1.png',
-         'nagi_1.png',
-         'nagi_2.png',
-         'music_bottles.png',
-         'sublimate.png',
-         'bacon_1.png',
-         'reversible_fig.gif',
-         'ancient_creatures.png',
-         'lynch.png',
-         'bacon_2.png',
-         'arakawa_2.png',
-         'bateson_1.png',
-         'bateson_2.png',
-         'bateson_3.png']
 
 class Tweet
   def initialize
-    @sentences = Sentence.all
-
-    pick_up = []
-    SENTENCE_NO.each do |i|
-      pick_up += @sentences.to_a[i].map(&:sentence)
-    end
-    @text = join_text(pick_up.flat_map{ |t| from_text_to_tweets(t) })
+    @texts = Text.all
+    @medias = MediaTweet.all
+    @theme_numbers = Theme.where(open: true).map(&:theme_id)
+    @current_id = Theme.where.not(current_text_id: nil).current_text_id
+    @recent_tweets_count = @texts.size * 9 / 10
 
     @client = Twitter::REST::Client.new(
       consumer_key:        ENV['TWITTER_CONSUMER_KEY'],
@@ -77,16 +43,23 @@ class Tweet
   end
 
   def normal_tweet
-    if index = last_tweet_index
-      tweet = @text[(index + 1) % @text.size]
+    if index = next_tweet_index
+      tweet = Text.find(index).text
       text = ''
       # テーマの終わり
       if delete_https(tweet)[-1] == END_OF_THEME
-        tweet += '次は【' + next_theme.to_s + '】'
+        theme_no = next_theme
+        tweet += '次は【' + theme_no.to_s + '】'
+        # データの更新
+        func =
+          ->{ @texts.each_with_index { |text, i| return i + 1 if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no} }
+        target_theme = Theme.find_by.not(current_text_id: nil).update(current_text_id: nil)
+        Theme.find_by(theme_id: theme_no).update(current_text_id: func.call)
+
       end
-      media_indexes = WITH_MEDIA.map.with_index{ |t, i| i if tweet.include?(t) }.compact
-      unless media_indexes.empty?
-        media_tweet(media_indexes, media_indexes.size, tweet)
+      cur_text = @texts.find(index)
+      if cur_text.media
+        media_tweet(@medias.where(text_id: index).map(&:media), tweet)
       else
         # 分割ツイート
         text, tweet = split_tweet(tweet)
@@ -100,14 +73,12 @@ class Tweet
 
   # 形態素解析して作文する
   def random_tweet_using_mecab
-    @text.shuffle!
+    @texts.to_a.shuffle!
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     tweet = choice_sentence(dic)
     update(tweet)
   end
-
-  private
 
   # TWEET_LIMIT以内で文章を切る。
   def from_text_to_tweets(text)
@@ -119,18 +90,6 @@ class Tweet
       ret = slice_text(text)
       ret[-1].slice!(-1)
       return ret
-    end
-  end
-
-  def slice_text(text)
-    ret = []
-    loop do
-      index = text[0,TWEET_LIMIT].rindex(/。|！|？|──/)
-      unless index
-        ret << text unless text == END_OF_THEME || text.empty?
-        return ret
-      end
-      ret << text.slice!(0, index + 1)
     end
   end
 
@@ -147,60 +106,60 @@ class Tweet
     ret
   end
 
+  private
+
+  def slice_text(text)
+    ret = []
+    loop do
+      index = text[0,TWEET_LIMIT].rindex(/。|！|？|──/)
+      unless index
+        ret << text unless text == END_OF_THEME || text.empty?
+        return ret
+      end
+      ret << text.slice!(0, index + 1)
+    end
+  end
+
   def is_words?(text)
     !text[-1].match(/。|！|？|─/)
   end
 
   # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
-  def last_tweet_index
-    tweets = @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET + 1)
+  def next_tweet_index
+    tweets = @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET)
     last_tweet = tweets[0].text
     # mecab_tweetの開始
     return if delete_https(last_tweet)[-1] == '】'
 
     indexes = tweets.map{ |tw|
       tw = delete_https(tw.text).gsub(/─?次は【\d+】/, '')
-      @text.index{ |t| t.include?(tw) }
+      @texts.index{ |t| t.include?(tw) }
     }
-    index = indexes[0]
-    # メディアツイートを考慮
-    if delete_https(last_tweet).empty?
-      index = indexes[1]
-    end
 
-    # 復帰
-    unless indexes[0, SEQUENCE_OF_MECAB_TWEET].any?
-      index = @text.map{ |t| t[0, 6] }.index{ |t| t.include?(find_number(tweets)) } - 1
+    unless indexes.any?
+      # 復帰
+      return @current_id
+    else
+      Theme.find_by.not(current_text_id: nil).update(current_text_id: @current_id + 1)
+      return @current_id + 1
     end
-    index
   end
 
   def delete_https(tweet)
     tweet.gsub(/\s?https?.+?[\n\s　]|\s?https?.+/, '')
   end
 
-  # 番号付けされたテーマの番号を直近のツイートから追跡
-  def find_number(tweets)
-    tweets.each do |tw|
-      if number = tw.text.slice(-5, 5).match(/\d+】/)
-        return '【' + number.to_s
-      end
-    end
-  end
-
   # 新しいテーマを決める
   def next_theme
-    # 最新450件にツイートされていないテーマを選ぶ
-    theme_numbers = @text.map{ |t|
-      md = t.match(/【(\d+)】/)
-      md[1].to_i if md
-    }.compact
-    timeline = @client.user_timeline(count: 50)
+    # 最新RECENT_TWEET_COUNT件にツイートされていないテーマを選ぶ
+    repeat, start = @recent_tweets_count.divmod(200)
+    
+    timeline = @client.user_timeline(count: start)
     maxid = 0
-    3.times do
+    repeat.times do
       timeline.each do |tw|
         md = tw.text.slice(0, 6).match(/【(\d+)】/)
-        theme_numbers.delete(md[1].to_i) if md
+        @theme_numbers.delete(md[1].to_i) if md
         maxid = tw.id - 1
       end
       timeline = @client.user_timeline(count: 200, max_id: maxid)
@@ -208,16 +167,18 @@ class Tweet
     theme_numbers.sample
   end
 
-  def media_tweet(media_indexes, n, tweet)
+  def media_tweet(medias, tweet)
     # AWS
     s3 = Aws::S3::Client.new
-    media_indexes.each_with_index do |index, i|
+    medias.each_with_index do |media, i|
       File.open(File.basename("hoge_#{i}.png"), 'w') do |file|
-        s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{MEDIA[index]}") do |data|
+        s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: media) do |data|
           file.write(data)
         end
       end
     end
+
+    n = medias.size
     # 分割ツイート
     t1, t2 = split_tweet(tweet, MEDIA_URL_LENGTH * n)
 
@@ -266,13 +227,13 @@ class Tweet
 
   # マルコフ連鎖用辞書の作成
   def make_dic(dic)
-    @text.each do |t|
+    @texts.map(&:text).each do |t|
       t.gsub!(/「.+?」。?|─.+?──?|【.+?】|『.+?』|[.+?]/, '')
       t.gsub!(/「|」|（|）|"|“|”/, '')
     end
     nm = Natto::MeCab.new
     data = ['BEGIN','BEGIN']
-    @text.each do |t|
+    @texts.map(&:text).each do |t|
       nm.parse(t) do |a|
         if a.surface != nil
           data << a.surface
