@@ -27,8 +27,8 @@ Then, migrate with the database.
 
     $ heroku run bundle exec rake db:migrate
   
-I think creating csv data is a better way if you want to insert the local-data into the heroku-postgresql.  
+I think creating csv data is a better way if you want to insert the data into the heroku-postgresql.  
 Then, use the following command.
 
     $ heroku pg:psql
-    => \copy sentences from 'sentences.csv' CSV;
+    => \copy texts from 'texts.csv' CSV;

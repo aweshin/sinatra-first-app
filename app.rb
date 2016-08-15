@@ -8,6 +8,7 @@ require './tweet.rb'
 
 get '/' do
   @sentences = Sentence.order("id desc").all
+  @themes = Theme.all
   erb :index
 end
 

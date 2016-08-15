@@ -126,8 +126,6 @@ class Tweet
   def next_tweet_index
     tweets = @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET)
     last_tweet = tweets[0].text
-    # mecab_tweetの開始
-    return if delete_https(last_tweet)[-1] == '】'
 
     indexes = tweets.map{ |tw|
       tw = delete_https(tw.text).gsub(/─?次は【\d+】/, '')
@@ -139,6 +137,9 @@ class Tweet
     unless indexes.any?
       # 復帰
       return current_id
+    elsif !indexes[0] || delete_https(last_tweet)[-1] == '】'
+      # zmecab_tweet
+      return
     else
       Theme.find_by("current_text_id > 0").update(current_text_id: current_id + 1)
       return current_id + 1
