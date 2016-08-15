@@ -124,21 +124,16 @@ class Tweet
 
   # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
   def next_tweet_index
-    tweets = @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET)
-    last_tweet = tweets[0].text
+    tweets = @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET + 1)
 
-    indexes = tweets.map{ |tw|
-      tw = delete_https(tw.text).gsub(/─?次は【\d+】/, '')
-      @texts.index{ |t| t.include?(tw) }
-    }
     current_id =
       Theme.find_by_sql("SELECT current_text_id FROM themes WHERE current_text_id > 0").map(&:current_text_id)[0]
 
-    unless indexes.any?
+    if delete_https(tweets[SEQUENCE_OF_MECAB_TWEET].text)[-1] == '】'
       # 復帰
       return current_id
-    elsif !indexes[0] || delete_https(last_tweet)[-1] == '】'
-      # zmecab_tweet
+    elsif tweets.map{ |t| delete_https(t.text)[-1] == '】' }.any?
+      # mecab_tweet
       return
     else
       Theme.find_by("current_text_id > 0").update(current_text_id: current_id + 1)
