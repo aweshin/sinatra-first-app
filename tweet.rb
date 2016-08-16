@@ -38,6 +38,30 @@ class Tweet
     )
   end
 
+  def create_texts(sentence, sentence_id)
+    if Theme.order(:theme_id).last.open
+      text = join_text(from_sentence_to_tweets(sentence.dup))
+      text.each do |t|
+        flag = false
+        target_medias = []
+        MediaTweet.all.each do |m|
+          if t.include?(m.with_media)
+            target_medias << m
+            flag = true
+          end
+        end
+        text = Text.create({text: t, media: flag, sentence_id: sentence_id})
+        target_medias.map{ |m| m.update(text_id: text.id)}
+      end
+    end
+    # themesテーブルの初期化
+    unless Theme.find_by("current_text_id > 0")
+      new_theme = Theme.where(open: true).order(:theme_id).first
+      new_id = Text.order(:id).first.id
+      new_theme.update(current_text_id: new_id)
+    end
+  end
+
   def normal_tweet
     if index = next_tweet_index
       tweet = Text.find(index).text
@@ -49,8 +73,8 @@ class Tweet
         tweet += '次は【' + theme_no.to_s + '】'
         # データの更新
         func =
-          -> { @texts.each_with_index { |text, i|
-            return i + 1 if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no } }
+          -> { @texts.each { |text|
+            return Text.find_by(text: text).id if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no } }
         target_theme = Theme.find_by("current_text_id > 0").update(current_text_id: nil)
         Theme.find_by(theme_id: theme_no).update(current_text_id: func.call)
       else
@@ -80,7 +104,7 @@ class Tweet
   end
 
   # TWEET_LIMIT以内で文章を切る。
-  def from_text_to_tweets(text)
+  def from_sentence_to_tweets(text)
     # 句点（に準ずるもの）で終了していれば
     if text[-1].match(/。|！|？|─/)
       return slice_text(text)
@@ -245,7 +269,7 @@ class Tweet
   def choose_sentence(dic)
     loop do
       text = connect(dic)
-      tweets = from_text_to_tweets(text)
+      tweets = from_sentence_to_tweets(text)
       if (ret = tweets[rand(tweets.size)]).length <= TWEET_LIMIT - 3 -
         END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG.length
         return ret + "\n" + '#' + END_OF_MECAB_TWEET.sample + "\n" + HASH_TAG

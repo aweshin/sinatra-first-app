@@ -4,15 +4,18 @@ require 'sinatra/reloader'
 require 'active_record'
 require './models/sentence.rb'
 require './models/theme.rb'
+require './models/media_tweet.rb'
 require './tweet.rb'
 
 get '/' do
+  @title = 'main index'
   @sentences = Sentence.order("id desc").all
   erb :index
 end
 
 post '/new' do
-  Sentence.create({sentence: params[:sentence]})
+  sentence = Sentence.create({sentence: params[:sentence]})
+  Tweet.new.create_texts(params[:sentence], sentence.id)
   redirect '/'
 end
 
@@ -21,6 +24,7 @@ post '/delete' do
 end
 
 get '/theme' do
+  @title = 'Themes'
   @themes = Theme.all
   erb :theme
 end
@@ -31,11 +35,12 @@ post '/theme_new' do
 end
 
 get '/media' do
+  @title = 'MediaTweet'
   erb :media
 end
 
 post '/media_new' do
-  MediaTweet.create({with_media: params[:with_media], media: params[:media]})
+  media = MediaTweet.create({with_media: params[:with_media], media: params[:media]})
   redirect '/'
 end
 

@@ -1,5 +1,5 @@
 class ModifyTexts < ActiveRecord::Migration
   def down
-    remove_column :texts, :words
+    add_column :texts, :sentence_id, :integer
   end
 end

@@ -6,4 +6,5 @@ ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || :development)
 class Text < ActiveRecord::Base
   has_many :media_tweets
   belongs_to :theme
+  belongs_to :sentence
 end

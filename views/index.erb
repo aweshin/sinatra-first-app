@@ -1,12 +1,14 @@
     <h1>SENTENCES</h1>
-    <a href="/media">メディアツイート登録へ</a>
-    <a href="/theme">テーマID登録へ</a>
-    <h2>Add New</h2>
+    <p><a href="/theme">1.テーマID登録</a></p>
+    <p><a href="/media">2.(もしあれば）メディアツイート登録へ</a></p>
+    <p>3.文章をここに記入してください。</p>
     <form method="post" action="/new">
-        <input type="text" name="sentence"> <input type="submit" value="post">
+
+        <textarea name="sentence" rows="8" cols="80"></textarea><br>
+        <input type="submit" value="post">
     </form>
     <ul>
-        <%= @sentences.size %>
+        <p>ただいまの文章登録数: <%= @sentences.size %></p>
         <% @sentences.each do |body| %>
         <li data-id="<%= body.id %>">
             <%= body.sentence %>

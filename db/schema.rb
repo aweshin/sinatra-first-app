@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160815005926) do
+ActiveRecord::Schema.define(version: 20160814122930) do
 
   create_table "media_tweets", force: :cascade do |t|
     t.string  "with_media"
@@ -24,7 +24,8 @@ ActiveRecord::Schema.define(version: 20160815005926) do
 
   create_table "texts", force: :cascade do |t|
     t.string  "text"
-    t.boolean "media", default: false
+    t.boolean "media",       default: false
+    t.integer "sentence_id"
   end
 
   create_table "themes", force: :cascade do |t|
