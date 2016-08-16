@@ -57,8 +57,7 @@ class Tweet
         Theme.find_by("current_text_id > 0").update(current_text_id: index + 1)
       end
 
-      cur_text = Text.find(index)
-      if cur_text.media
+      if Text.find(index).media
         media_tweet(MediaTweet.where(tweet_id: index).map(&:media), tweet)
       else
         # 分割ツイート
@@ -126,15 +125,10 @@ class Tweet
 
   # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
   def next_tweet_index
-    tweets = @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET + 1)
-
     current_id =
       Theme.find_by_sql("SELECT current_text_id FROM themes WHERE current_text_id > 0").map(&:current_text_id)[0]
 
-    if delete_https(tweets[SEQUENCE_OF_MECAB_TWEET].text)[-1] == '】'
-      # 復帰
-      return current_id
-    elsif tweets.map{ |t| delete_https(t.text)[-1] == '】' }.any?
+    if @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET).map{ |t| delete_https(t.text)[-1] == '】' }.any?
       # mecab_tweet
       return
     else

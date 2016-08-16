@@ -1,0 +1,10 @@
+<h2>公開テーマ</h2>
+<% @themes.each do |theme| %>
+    <%= theme.theme_id if theme.open %>
+<% end %>
+<h2>テーマIDを登録する</h2>
+<form method="post" action="/theme_new">
+    <input type="text" name="theme_id">
+    公開する
+    <input type="radio" name="open"> <input type="submit" value="post">
+</form>

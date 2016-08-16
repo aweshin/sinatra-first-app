@@ -8,7 +8,6 @@ require './tweet.rb'
 
 get '/' do
   @sentences = Sentence.order("id desc").all
-  @themes = Theme.all
   erb :index
 end
 
@@ -21,12 +20,21 @@ post '/delete' do
   Sentence.find(params[:id]).destroy
 end
 
-post '/theme' do
+get '/theme' do
+  @themes = Theme.all
+  erb :theme
+end
+
+post '/theme_new' do
   Theme.create({theme_id: params[:theme_id], open: params[:open] == 'on'})
   redirect '/'
 end
 
-post '/media' do
+get '/media' do
+  erb :media
+end
+
+post '/media_new' do
   MediaTweet.create({with_media: params[:with_media], media: params[:media]})
   redirect '/'
 end
