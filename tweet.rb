@@ -2,6 +2,7 @@ require 'rubygems'
 require 'twitter'
 require 'natto'
 require 'aws-sdk-core'
+require './models/sentence.rb'
 
 # 文字数制限140字
 TWEET_LIMIT = 140
