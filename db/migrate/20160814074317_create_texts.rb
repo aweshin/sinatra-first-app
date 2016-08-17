@@ -3,6 +3,7 @@ class CreateTexts < ActiveRecord::Migration
     create_table :texts do |t|
       t.string :text
       t.boolean :media, default: false  # メディアツイートフラグ
+      t.integer :sentence_id
     end
   end
 end

@@ -1,11 +1,23 @@
 <h2>公開テーマ</h2>
 <% @themes.each do |theme| %>
-    <%= theme.theme_id if theme.open %>
+<div data-id="<%= theme.theme_id %>">
+    <span class="push" style="cursor:pointer;color:blue"><%= theme.theme_id if theme.open %></span>
+</div>
 <% end %>
-<h2>テーマIDを登録する</h2>
+<h2>テーマIDを登録する（変更も可能）</h2>
 <form method="post" action="/theme_new">
-    <input type="text" name="theme_id">
-    公開する
-    <input type="radio" name="open"> <input type="submit" value="post">
+    <p>
+    <input type="text" name="theme_id" class="theme_id" value="<%= @new_theme_id %>">
+    <input type="radio" name="open" value="on" checked="checked">公開する
+    <input type="radio" name="open" value="off">公開しない
+    <input type="submit" value="登録">
+    </p>
 </form>
 <p><a href="/">戻る</a></p>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script>
+    $('.push').click(function() {
+        var el = $(this).parent();
+        $('.theme_id').val(el.data('id'));
+    });
+</script>

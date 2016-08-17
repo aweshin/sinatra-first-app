@@ -2,9 +2,7 @@ require 'rubygems'
 require 'twitter'
 require 'natto'
 require 'aws-sdk-core'
-require './models/text.rb'
-require './models/media_tweet.rb'
-require './models/theme.rb'
+
 # 文字数制限140字
 TWEET_LIMIT = 140
 # メディアツイートの短縮URL
@@ -36,30 +34,6 @@ class Tweet
       access_token:        ENV['TWITTER_ACCESS_TOKEN'],
       access_token_secret: ENV['TWITTER_ACCESS_TOKEN_SECRET']
     )
-  end
-
-  def create_texts(sentence, sentence_id)
-    if Theme.order(:theme_id).last.open
-      text = join_text(from_sentence_to_tweets(sentence.dup))
-      text.each do |t|
-        flag = false
-        target_medias = []
-        MediaTweet.all.each do |m|
-          if t.include?(m.with_media)
-            target_medias << m
-            flag = true
-          end
-        end
-        text = Text.create({text: t, media: flag, sentence_id: sentence_id})
-        target_medias.map{ |m| m.update(text_id: text.id)}
-      end
-    end
-    # themesテーブルの初期化
-    unless Theme.find_by("current_text_id > 0")
-      new_theme = Theme.where(open: true).order(:theme_id).first
-      new_id = Text.order(:id).first.id
-      new_theme.update(current_text_id: new_id)
-    end
   end
 
   def normal_tweet
@@ -106,27 +80,15 @@ class Tweet
   # TWEET_LIMIT以内で文章を切る。
   def from_sentence_to_tweets(text)
     # 句点（に準ずるもの）で終了していれば
-    if text[-1].match(/。|！|？|─/)
+    # if text[-1].match(/。|！|？|─/)
+    unless text.match("\n")
       return slice_text(text)
     else
-      text += '。' # ダミー
+      text.gsub!("\n", '。') # ダミー
       ret = slice_text(text)
-      ret[-1].slice!(-1)
+      ret.map!{ |r| r.gsub('。', "\n") }
       return ret
     end
-  end
-
-  def join_text(text)
-    ret = [text.shift]
-    text.each do |t|
-      # 前の文章が句読点で終わっていない、かつ、次の文章を足しても文字数が超過しなければ
-      if is_words?(ret.last) && ret.last.length + t.length + 1 <= TWEET_LIMIT
-        ret[-1] += "\n" + t
-      else
-        ret << t
-      end
-    end
-    ret
   end
 
   private

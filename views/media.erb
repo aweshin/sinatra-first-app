@@ -1,6 +1,11 @@
 <h2>メディアツイート</h2>
 <form method="post" action="/media_new">
     文言<input type="text" name="with_media">
-    ファイル名<input type="text" name="media"> <input type="submit" value="post">
+    ファイル名<input type="text" name="media"> <input type="submit" value="登録">
 </form>
+<% @medias.each do |media| %>
+<li>
+<p><%= media.with_media %>   <%= media.media %></p>
+</li>
+<% end %>
 <p><a href="/">戻る</a></p>
