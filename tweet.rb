@@ -53,7 +53,7 @@ class Tweet
         target_theme = Theme.find_by("current_text_id > 0").update(current_text_id: nil)
         Theme.find_by(theme_id: theme_no).update(current_text_id: func.call)
       else
-        Theme.find_by("current_text_id > 0").update(current_text_id: index + 1)
+        Theme.find_by("current_text_id > 0").update(current_text_id: Text.all.map(&:id).select{ |i| index < i }.min)
       end
 
       if Text.find(index).media
@@ -81,7 +81,6 @@ class Tweet
   # TWEET_LIMIT以内で文章を切る。
   def from_sentence_to_tweets(text)
     # 句点（に準ずるもの）で終了していれば
-    # if text[-1].match(/。|！|？|─/)
     unless text.match("\n")
       return slice_text(text)
     else

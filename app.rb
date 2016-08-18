@@ -6,38 +6,35 @@ require './models/sentence.rb'
 require './tweet.rb'
 
 get '/' do
-  @title = 'main index'
+  @title = '文章登録'
   @sentences = Sentence.order("id desc").all
   erb :index
 end
 
 post '/new' do
   sentence = Sentence.create({sentence: params[:sentence]})
-  unless sentence.errors.any?
-    tweet = Tweet.new
-    text = tweet.from_sentence_to_tweets(params[:sentence].dup)
-    text.each do |t|
-      flag = false
-      target_medias = []
-      MediaTweet.all.each do |m|
-        if t.include?(m.with_media)
-          target_medias << m
-          flag = true
-        end
+  redirect '/error' if sentence.errors.any?
+  tweet = Tweet.new
+  texts = tweet.from_sentence_to_tweets(params[:sentence].dup)
+  texts.each do |t|
+    flag = false
+    target_medias = []
+    MediaTweet.all.each do |m|
+      if t.include?(m.with_media)
+        target_medias << m
+        flag = true
       end
-      text = Text.create({text: t, media: flag, sentence_id: sentence.id})
-      target_medias.map{ |m| m.update(tweet_id: text.id)}
     end
-    # themesテーブルの初期化
-    unless Theme.find_by("current_text_id > 0")
-      new_theme = Theme.where(open: true).order(:theme_id).first
-      new_id = Text.order(:id).first.id
-      new_theme.update(current_text_id: new_id)
-    end
-    redirect '/'
-  else
-    redirect '/error'
+    text = Text.create({text: t, media: flag, sentence_id: sentence.id})
+    target_medias.map{ |m| m.update(tweet_id: text.id)}
   end
+  # themesテーブルの初期化
+  unless Theme.find_by("current_text_id > 0")
+    new_theme = Theme.where(open: true).order(:theme_id).first
+    new_id = Text.order(:id).first.id
+    new_theme.update(current_text_id: new_id)
+  end
+  redirect '/'
 end
 
 post '/delete' do
