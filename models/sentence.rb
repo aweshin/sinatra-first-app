@@ -12,7 +12,7 @@ end
 class Text < ActiveRecord::Base
   has_many :media_tweets
   belongs_to :theme
-  belongs_to :sentence
+  belongs_to :sentenc
 end
 
 class Theme < ActiveRecord::Base
@@ -24,4 +24,11 @@ class MediaTweet < ActiveRecord::Base
   belongs_to :text
   validates :with_media, presence: true
   validates :media, presence: true
+end
+
+class User < ActiveRecord::Base
+  validates :name, presence: true
+  validates :salt, presence: true
+  validates :passwordhash, presence: true
+  validates :passwordhash, confirmation: true
 end

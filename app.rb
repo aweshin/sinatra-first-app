@@ -4,11 +4,33 @@ require 'sinatra/reloader'
 require 'active_record'
 require './models/sentence.rb'
 require './tweet.rb'
+require 'bcrypt'
+
+enable :sessions
+
+helpers do
+  def login?
+    if session[:username].nil?
+      return false
+    else
+      return true
+    end
+  end
+
+  def username
+    return session[:username]
+  end
+end
+
 
 get '/' do
-  @title = '文章登録'
-  @sentences = Sentence.order("id desc").all
-  erb :index
+  if login?
+    @title = '文章登録'
+    @sentences = Sentence.order("id desc").all
+    erb :index
+  else
+    erb :login
+  end
 end
 
 post '/new' do
@@ -68,6 +90,34 @@ end
 post '/media_new' do
   media = MediaTweet.create({with_media: params[:with_media], media: params[:media]})
   redirect '/error' if media.errors.any?
+  redirect '/'
+end
+
+post '/login' do
+  if user = User.find_by(name: params[:name])
+    if user[:passwordhash] == BCrypt::Engine.hash_secret(params[:password], user[:salt])
+      session[:username] = params[:name]
+      redirect '/'
+    end
+  end
+  erb :error
+end
+
+get '/logout' do
+  session[:username] = nil
+  redirect '/'
+end
+
+get '/signup' do
+  erb :signup
+end
+
+post '/signup' do
+  password_salt = BCrypt::Engine.generate_salt
+  password_hash = BCrypt::Engine.hash_secret(params[:password], password_salt)
+
+  User.create({name: params[:name], salt: password_salt, passwordhash: password_hash})
+  session[:username] = params[:name]
   redirect '/'
 end
 

@@ -26,9 +26,4 @@ And create an app and push the source.
 Then, migrate with the database.
 
     $ heroku run bundle exec rake db:migrate
-  
-I think creating csv data is a better way if you want to insert the data into the heroku-postgresql.  
-Then, use the following command.
-
-    $ heroku pg:psql
-    => \copy texts from 'texts.csv' CSV;
+    

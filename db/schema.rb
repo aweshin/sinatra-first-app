@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160814101319) do
+ActiveRecord::Schema.define(version: 20160820132703) do
 
   create_table "media_tweets", force: :cascade do |t|
     t.string  "with_media"
@@ -32,6 +32,12 @@ ActiveRecord::Schema.define(version: 20160814101319) do
     t.integer "theme_id"
     t.boolean "open",            default: true
     t.integer "current_text_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "name"
+    t.string "salt"
+    t.string "passwordhash"
   end
 
 end
