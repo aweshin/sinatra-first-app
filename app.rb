@@ -4,7 +4,6 @@ require 'sinatra/reloader'
 require 'active_record'
 require './models/sentence.rb'
 require './tweet.rb'
-require 'bcrypt'
 
 enable :sessions
 
@@ -16,10 +15,6 @@ helpers do
       return true
     end
   end
-
-  def username
-    return session[:username]
-  end
 end
 
 
@@ -29,7 +24,7 @@ get '/' do
     @sentences = Sentence.order("id desc").all
     erb :index
   else
-    erb :login
+    redirect '/login'
   end
 end
 
@@ -93,14 +88,27 @@ post '/media_new' do
   redirect '/'
 end
 
+post '/media_delete' do
+  MediaTweet.find(params[:id]).destroy
+end
+
+get '/login' do
+  @title = 'ログイン'
+  @user = User.new
+  erb :login
+end
+
 post '/login' do
-  if user = User.find_by(name: params[:name])
-    if user[:passwordhash] == BCrypt::Engine.hash_secret(params[:password], user[:salt])
-      session[:username] = params[:name]
-      redirect '/'
-    end
+  @user = User.new(name: params[:name])
+  @user.encrypt_password(params[:password])
+  if @user.name == '' || !@user.salt
+    erb :login
+  elsif User.authenticate(params[:name], params[:password])
+    session[:username] = params[:name]
+    redirect '/'
+  else
+    erb :error
   end
-  erb :error
 end
 
 get '/logout' do
@@ -109,22 +117,32 @@ get '/logout' do
 end
 
 get '/signup' do
+  @title = '登録'
+  @user = User.new
   erb :signup
 end
 
-post '/signup' do
-  password_salt = BCrypt::Engine.generate_salt
-  password_hash = BCrypt::Engine.hash_secret(params[:password], password_salt)
 
-  User.create({name: params[:name], salt: password_salt, passwordhash: password_hash})
-  session[:username] = params[:name]
-  redirect '/'
+post '/signup' do
+  @title = '登録'
+  if params[:password] != params[:password_confirmation]
+    redirect '/error'
+  end
+  @user = User.new(name: params[:name])
+  @user.encrypt_password(params[:password])
+  if @user.save
+    session[:username] = params[:name]
+    redirect '/'
+  else
+    erb :signup
+  end
 end
 
 get '/error' do
   @title = 'エラー'
   erb :error
 end
+
 
 get '/normal_tweet' do
   Tweet.new.normal_tweet

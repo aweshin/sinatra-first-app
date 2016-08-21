@@ -12,26 +12,37 @@
     </table>
     <input type="submit" value="登録">
 </form>
-
 <br>
 
 <table border="1" cellspacing="0" bordercolor="#000000">
     <tr>
-
+        <th>削除</th>
         <th>文言</th>
-
         <th>ファイル名</th>
-
     </tr>
     <% @medias.each do |media| %>
-        <tr>
-
-        <td><%= media.with_media %></td>
-
-        <td><%= media.media %></td>
-
+        <tr data-id="<%= media.id %>">
+            <td><input type="checkbox" class="delete"></td>
+            <td><%= media.with_media %></td>
+            <td><%= media.media %></td>
         </tr>
     <% end %>
 </table>
 
 <p><a href="/">戻る</a></p>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script>
+     $('.delete').change(function() {
+        if ($(this).is(':checked')) {
+            if (confirm('are you sure to delete?')) {
+                var el = $(this).parent().parent();
+                $.post('/media_delete', {
+                    id: el.data('id')
+                }, function() {
+                    el.fadeOut(800);
+                });
+            }
+        }
+    })
+</script>

@@ -1,4 +1,5 @@
 require 'active_record'
+require 'bcrypt'
 # データベースへの接続
 ActiveRecord::Base.configurations = YAML.load_file('db/database.yml')
 ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || :development)
@@ -27,8 +28,23 @@ class MediaTweet < ActiveRecord::Base
 end
 
 class User < ActiveRecord::Base
-  validates :name, presence: true
-  validates :salt, presence: true
-  validates :passwordhash, presence: true
+  validates :name, presence: { message: "入力してください。" }
+  validates :salt, presence: { message: "入力してください。" }
   validates :passwordhash, confirmation: true
+
+  def self.authenticate(name, password)
+    user = self.where(name: name).first
+    if user && user.passwordhash == BCrypt::Engine.hash_secret(password, user.salt)
+      user
+    else
+      nil
+    end
+  end
+
+  def encrypt_password(password)
+    if password.present?
+      self.salt = BCrypt::Engine.generate_salt
+      self.passwordhash = BCrypt::Engine.hash_secret(password, salt)
+    end
+  end
 end

@@ -1,5 +1,5 @@
 <h2>公開テーマ</h2>
-<p>最新順</p>
+<p>最新ツイート順</p>
 <select id="theme_id_select">
 <% @themes.reverse.each do |theme| %>
     <% if theme.open %>
@@ -23,7 +23,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 <script>
     $('#theme_id_select').on('change', function() {
-        var area = $('#theme_id_select option:selected').text();
-        $('.theme_id').val(area);
+        var theme_id = $('#theme_id_select option:selected').text();
+        $('.theme_id').val(theme_id);
     });
 </script>

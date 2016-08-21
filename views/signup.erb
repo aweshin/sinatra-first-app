@@ -12,6 +12,14 @@
     <label for="password_confirmation">パスワード（確認）</label>
     <input type="password" name="password_confirmation">
     </p>
+    <p><% if @user.errors.any? %>
+    <% @user.errors.each do |k, v| %>
+    <%= k == :name ? 'ユーザー名' : 'パスワード' %>
+    <%= v  %>
+    <br>
+    <% end %>
+    <% end %>
+    </p>
     <p>
     <input type="submit" value="登録">
     </p>

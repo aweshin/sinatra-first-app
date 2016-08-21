@@ -50,8 +50,9 @@ class Tweet
         func =
           -> { @texts.each { |text|
             return Text.find_by(text: text).id if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no } }
-        target_theme = Theme.find_by("current_text_id > 0").update(current_text_id: nil)
-        Theme.find_by(theme_id: theme_no).update(current_text_id: func.call)
+        Theme.find_by("current_text_id > 0").update(current_text_id: nil)
+        Theme.find_by(theme_id: theme_no).destroy
+        Theme.create({theme_id: theme_no, open: true, current_text_id: func.call})
       else
         Theme.find_by("current_text_id > 0").update(current_text_id: Text.all.map(&:id).select{ |i| index < i }.min)
       end
