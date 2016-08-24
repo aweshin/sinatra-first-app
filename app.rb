@@ -48,7 +48,7 @@ post '/new' do
   # themesテーブルの初期化
   unless Theme.find_by("current_text_id > 0")
     new_theme = Theme.where(open: true).order(:theme_id).first
-    new_id = Text.order(:id).first.id
+    new_id = Text.first.id
     new_theme.update(current_text_id: new_id)
   end
   redirect '/'

@@ -13,7 +13,7 @@ end
 class Text < ActiveRecord::Base
   has_many :media_tweets
   belongs_to :theme
-  belongs_to :sentenc
+  belongs_to :sentence
 end
 
 class Theme < ActiveRecord::Base

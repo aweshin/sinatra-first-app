@@ -16,6 +16,8 @@ INTERVAL = 12
 END_OF_THEME = '─'
 # MECAB_TWEETの連続数
 SEQUENCE_OF_MECAB_TWEET = 2
+# 再度ツイートする旧ツイートの範囲（逆数）
+INV_REUSE_RANGE = 10
 
 # mecabツイートの語尾
 END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…',
@@ -44,15 +46,8 @@ class Tweet
 
       # テーマの終わり
       if delete_https(tweet)[-1] == END_OF_THEME
-        theme_no = choose_next_theme
+        theme_no = choose_next_theme(Theme.find_by("current_text_id > 0").id, Theme.where(open: true).count)
         tweet += '次は【' + theme_no.to_s + '】'
-        # データの更新
-        func =
-          -> { @texts.each { |text|
-            return Text.find_by(text: text).id if (md = text.slice(0, 6).match(/【(\d+)】/)) && md[1].to_i == theme_no } }
-        Theme.find_by("current_text_id > 0").update(current_text_id: nil)
-        Theme.find_by(theme_id: theme_no).destroy
-        Theme.create({theme_id: theme_no, open: true, current_text_id: func.call})
       else
         Theme.find_by("current_text_id > 0").update(current_text_id: Text.all.map(&:id).select{ |i| index < i }.min)
       end
@@ -128,23 +123,23 @@ class Tweet
   end
 
   # 新しいテーマを決める
-  def choose_next_theme
-    # 同じテーマを近づけてツイートしない
-    recent_tweets_count = @texts.size * 9 / 10
-    # 最新recent_tweets_count件にツイートされていないテーマを選ぶ
-    repeat, start = recent_tweets_count.divmod(200)
-    theme_numbers = Theme.where(open: true).map(&:theme_id)
-    timeline = @client.user_timeline(count: start)
-    maxid = 0
-    repeat.times do
-      timeline.each do |tw|
-        md = tw.text.slice(0, 6).match(/【(\d+)】/)
-        theme_numbers.delete(md[1].to_i) if md
-        maxid = tw.id - 1
-      end
-      timeline = @client.user_timeline(count: 200, max_id: maxid)
+  def choose_next_theme(id, size)
+    max_id = Theme.where(open: true).maximum(:id)
+    ret = Theme.find_by(id: max_id).theme_id
+    Theme.find_by("current_text_id > 0").update(current_text_id: nil)
+    # データの更新
+    func =
+      -> theme_no { query = '【' + theme_no.to_s + '】' + '%'
+        Text.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0] }
+    if max_id > id
+      Theme.find(ret).update(current_text_id: func.call(ret))
+    else
+      range = size / INV_REUSE_RANGE
+      ret = Theme.where(open: true).offset(rand(range)).first.theme_id
+      Theme.find_by(theme_id: ret).destroy
+      Theme.create({theme_id: ret, open: true, current_text_id: func.call(ret)})
     end
-    theme_numbers.sample
+    ret
   end
 
   def media_tweet(medias, tweet)
