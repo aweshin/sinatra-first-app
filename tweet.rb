@@ -132,7 +132,7 @@ class Tweet
       -> theme_no { query = '【' + theme_no.to_s + '】' + '%'
         Text.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0] }
     if max_id > id
-      Theme.find(ret).update(current_text_id: func.call(ret))
+      Theme.find_by(theme_id: ret).update(current_text_id: func.call(ret))
     else
       range = size / INV_REUSE_RANGE
       ret = Theme.where(open: true).offset(rand(range)).first.theme_id
