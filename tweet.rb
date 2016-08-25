@@ -124,22 +124,23 @@ class Tweet
 
   # 新しいテーマを決める
   def choose_next_theme(id, size)
-    max_id = Theme.where(open: true).maximum(:id)
-    ret = Theme.find_by(id: max_id).theme_id
+    next_id = Theme.all.map(&:id).select{ |i| id < i }.min
     Theme.find_by("current_text_id > 0").update(current_text_id: nil)
     # データの更新
     func =
       -> theme_no { query = '【' + theme_no.to_s + '】' + '%'
         Text.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0] }
-    if max_id > id
-      Theme.find_by(theme_id: ret).update(current_text_id: func.call(ret))
+    if next_id
+      next_theme = Theme.find(next_id).theme_id
+      Theme.find_by(id: next_id).update(current_text_id: func.call(next_theme))
+      return next_theme
     else
       range = size / INV_REUSE_RANGE
-      ret = Theme.where(open: true).offset(rand(range)).first.theme_id
-      Theme.find_by(theme_id: ret).destroy
-      Theme.create({theme_id: ret, open: true, current_text_id: func.call(ret)})
+      next_theme = Theme.where(open: true).offset(rand(range)).first.theme_id
+      Theme.find_by(theme_id: next_theme).destroy
+      Theme.create({theme_id: next_theme, open: true, current_text_id: func.call(next_theme)})
+      return next_theme
     end
-    ret
   end
 
   def media_tweet(medias, tweet)

@@ -1,7 +1,9 @@
 <h2>Twitter botを作成</h2>
 <p><a href="/theme">1.テーマID登録</a></p>
 <p><a href="/media">2.(もしあれば）メディアツイート登録へ</a></p>
-<p>3.文章をここに記入してください。</p>
+<p>3.文章をここに記入してください。<br>
+ただし、141字以上の文は登録されず、それ以降の文も無視されますのでご注意ください。<br>
+また、１テーマごとに、【#テーマ番号】からはじめ、──で終えてください。</p>
 <form method="post" action="/new">
     <textarea name="sentence" rows="8" cols="80"></textarea><br>
     <input type="submit" value="登録">
