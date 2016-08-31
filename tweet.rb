@@ -46,18 +46,23 @@ class Tweet
       # テーマの終わり
       if delete_https(tweets.last.text)[-1] == END_OF_THEME
         theme_no = choose_next_theme(Theme.find_by("current_sentence_id > 0").id, Theme.where(open: true).count)
-        tweet += '次は【' + theme_no.to_s + '】'
+        tweets[-1].text += '次は【' + theme_no.to_s + '】'
       else
         Theme.find_by("current_sentence_id > 0").update(current_sentence_id: Sentence.all.map(&:id).select{ |i| index < i }.min)
       end
       tweets.each do |tweet|
+        t = tweet.text
         if tweet.media
-          media_tweet(MediaTweet.where(tweet_id: tweet.id).map(&:media), tweet.text)
+          media_tweet(MediaTweet.where(tweet_id: tweet.id).map(&:media), t)
         else
+          if t[-1] == '】'
           # 分割ツイート
-          text1, text2 = split_tweet(tweet.text)
-          update(text1)
-          update(text2) unless text2.empty?
+            text1, text2 = split_tweet(t)
+            update(text1)
+            update(text2) unless text2.empty?
+          else
+            update(t)
+          end
         end
       end
     else
