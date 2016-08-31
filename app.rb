@@ -31,7 +31,7 @@ end
 
 post '/new' do
   @texts = Tweet.new.from_sentence_to_tweets(params[:sentence].dup)
-  if @texts
+  if @texts && @texts[0] != "\n"
     sentence = Sentence.create({sentence: params[:sentence]})
     @texts.each do |t|
       flag = false
@@ -55,7 +55,7 @@ post '/new' do
     redirect '/'
   else
     @title = '文章登録'
-    @sentences = Sentence.order("id desc").all
+    @tweets = Text.order("id desc").all
     erb :index
   end
 end
