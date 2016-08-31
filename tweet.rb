@@ -91,7 +91,7 @@ class Tweet
         if text.size > TWEET_LIMIT
           return
         else
-          return text == END_OF_THEME ? ret : ret << text
+          return (text == END_OF_THEME || text.empty?) ? ret : ret << text
         end
       end
       ret << text.slice!(0, index + 1)
