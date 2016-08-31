@@ -59,6 +59,7 @@ class Tweet
           update(text1)
           update(text2) unless text2.empty?
         end
+      end
     else
       random_tweet_using_mecab
     end
