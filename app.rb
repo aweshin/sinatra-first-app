@@ -21,8 +21,8 @@ end
 get '/' do
   if login?
     @title = '文章登録'
-    @sentences = Sentence.order("id desc").all
-    @texts = @sentences.last.sentence # ダミー
+    @tweets = Text.order("id desc").all
+    @texts = @tweets.last.text # ダミー
     erb :index
   else
     redirect '/login'
@@ -46,10 +46,11 @@ post '/new' do
       target_medias.map{ |m| m.update(tweet_id: text.id)}
     end
     # themesテーブルの初期化
-    unless Theme.find_by("current_text_id > 0")
-      new_theme = Theme.where(open: true).order(:theme_id).first
-      new_id = Text.first.id
-      new_theme.update(current_text_id: new_id)
+    themes = Theme.where(open: true)
+    unless themes.find_by("current_sentence_id > 0")
+      query = '【' + themes.first.theme_id.to_s + '】' + '%'
+      id = Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0]
+      Theme.where(open: true).first.update(current_sentence_id: id)
     end
     redirect '/'
   else

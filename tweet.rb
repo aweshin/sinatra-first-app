@@ -40,26 +40,25 @@ class Tweet
   end
 
   def normal_tweet
-    if index = next_tweet_index
-      tweet = Text.find(index).text
-      text = ''
+    if index = next_sentence_id
+      tweets = Text.where(sentence_id: index)
 
       # テーマの終わり
-      if delete_https(tweet)[-1] == END_OF_THEME
-        theme_no = choose_next_theme(Theme.find_by("current_text_id > 0").id, Theme.where(open: true).count)
+      if delete_https(tweets.last.text)[-1] == END_OF_THEME
+        theme_no = choose_next_theme(Theme.find_by("current_sentence_id > 0").id, Theme.where(open: true).count)
         tweet += '次は【' + theme_no.to_s + '】'
       else
-        Theme.find_by("current_text_id > 0").update(current_text_id: Text.all.map(&:id).select{ |i| index < i }.min)
+        Theme.find_by("current_sentence_id > 0").update(current_sentence_id: Sentence.all.map(&:id).select{ |i| index < i }.min)
       end
-
-      if Text.find(index).media
-        media_tweet(MediaTweet.where(tweet_id: index).map(&:media), tweet)
-      else
-        # 分割ツイート
-        text, tweet = split_tweet(tweet)
-        update(text)
-        update(tweet) unless tweet.empty?
-      end
+      tweets.each do |tweet|
+        if tweet.media
+          media_tweet(MediaTweet.where(tweet_id: tweet.id).map(&:media), tweet.text)
+        else
+          # 分割ツイート
+          text1, text2 = split_tweet(tweet.text)
+          update(text1)
+          update(text2) unless text2.empty?
+        end
     else
       random_tweet_using_mecab
     end
@@ -77,7 +76,9 @@ class Tweet
   # TWEET_LIMIT以内で文章を切る。
   def from_sentence_to_tweets(text)
     # 句点（に準ずるもの）と改行文字で文章を区切る。（ただし、終端の改行文字は無視する。）
-    slice_text(text.gsub(/\n+\z/, ''))
+    text.gsub!(/\n+\z/, '')
+    text << "\n" unless text[-1] =~ /。|！|？|─/
+    slice_text(text)
   end
 
   private
@@ -103,9 +104,9 @@ class Tweet
   end
 
   # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
-  def next_tweet_index
+  def next_sentence_id
     current_id =
-      Theme.find_by_sql("SELECT current_text_id FROM themes WHERE current_text_id > 0").map(&:current_text_id)[0]
+      Theme.find_by_sql("SELECT current_sentence_id FROM themes WHERE current_sentence_id > 0").map(&:current_sentence_id)[0]
 
     if @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET).map{ |t| delete_https(t.text)[-1] == '】' }.any?
       # mecab_tweet
@@ -122,20 +123,20 @@ class Tweet
   # 新しいテーマを決める
   def choose_next_theme(id, size)
     next_id = Theme.all.map(&:id).select{ |i| id < i }.min
-    Theme.find_by("current_text_id > 0").update(current_text_id: nil)
+    Theme.find_by("current_sentence_id > 0").update(current_sentence_id: nil)
     # データの更新
     func =
       -> theme_no { query = '【' + theme_no.to_s + '】' + '%'
-        Text.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0] }
+        Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0] }
     if next_id
       next_theme = Theme.find(next_id).theme_id
-      Theme.find_by(id: next_id).update(current_text_id: func.call(next_theme))
+      Theme.find_by(id: next_id).update(current_sentence_id: func.call(next_theme))
       return next_theme
     else
       range = size / INV_REUSE_RANGE
       next_theme = Theme.where(open: true).offset(rand(range)).first.theme_id
       Theme.find_by(theme_id: next_theme).destroy
-      Theme.create({theme_id: next_theme, open: true, current_text_id: func.call(next_theme)})
+      Theme.create({theme_id: next_theme, open: true, current_sentence_id: func.call(next_theme)})
       return next_theme
     end
   end
