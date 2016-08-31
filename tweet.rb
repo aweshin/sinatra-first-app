@@ -77,14 +77,7 @@ class Tweet
   # TWEET_LIMIT以内で文章を切る。
   def from_sentence_to_tweets(text)
     # 句点（に準ずるもの）で終了していれば。（ただし、終端が改行文字でも無視する。）
-    unless text.gsub(/\Z\n/, '').match("\n")
-      return slice_text(text)
-    else
-      text.gsub!("\n", '。') # ダミー
-      ret = slice_text(text)
-      ret.map!{ |r| r.gsub('。', "\n") }
-      return ret
-    end
+    slice_text(text.gsub(/\n+\z/, ''))
   end
 
   private
@@ -92,7 +85,7 @@ class Tweet
   def slice_text(text)
     ret = []
     loop do
-      index = text[0,TWEET_LIMIT].rindex(/。|！|？|──/)
+      index = text[0,TWEET_LIMIT].rindex(/。|！|？|──|\n/)
       unless index
         ret << text unless text == END_OF_THEME || text.empty?
         return ret
