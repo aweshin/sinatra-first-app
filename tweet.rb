@@ -76,7 +76,7 @@ class Tweet
 
   # TWEET_LIMIT以内で文章を切る。
   def from_sentence_to_tweets(text)
-    # 句点（に準ずるもの）で終了していれば。（ただし、終端が改行文字でも無視する。）
+    # 句点（に準ずるもの）と改行文字で文章を区切る。（ただし、終端の改行文字は無視する。）
     slice_text(text.gsub(/\n+\z/, ''))
   end
 
@@ -87,8 +87,12 @@ class Tweet
     loop do
       index = text[0,TWEET_LIMIT].rindex(/。|！|？|──|\n/)
       unless index
-        ret << text unless text == END_OF_THEME || text.empty?
-        return ret
+        # alert「141文字以上の文が含まれています」を出す。
+        if text.size > TWEET_LIMIT
+          return
+        else
+          return text == END_OF_THEME ? ret : ret << text
+        end
       end
       ret << text.slice!(0, index + 1)
     end
@@ -197,7 +201,7 @@ class Tweet
   # マルコフ連鎖用辞書の作成
   def make_dic(dic)
     @texts.each do |t|
-      t.gsub!(/「.+?」。?|─.+?──?|【.+?】|『.+?』|[.+?]/, '')
+      t.gsub!(/「.+?」。?|─.+?──?|【.+?】|『.+?』|\[.+?\]/, '')
       t.gsub!(/「|」|（|）|"|“|”/, '')
     end
     nm = Natto::MeCab.new

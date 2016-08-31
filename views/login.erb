@@ -11,9 +11,4 @@
     <p>
     <input type="submit" value="ログイン">
     </p>
-    <p>
-    <% if @user.name == '' || !@user.salt %>
-    <%= '入力してください。'%>
-    <% end %>
-    </p>
 </form>

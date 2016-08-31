@@ -2,7 +2,7 @@
 <p><a href="/theme">1.テーマID登録</a></p>
 <p><a href="/media">2.(もしあれば）メディアツイート登録へ</a></p>
 <p>3.文章をここに記入してください。<br>
-ただし、141字以上の文は登録されず、それ以降の文も無視されますのでご注意ください。<br>
+ただし、141字以上の文は、文を区切って再登録してください。<br>
 また、１テーマごとに、【#テーマ番号】からはじめ、──で終えてください。<br>
 登録文章に改行が含まれていると、改行もツイートに反映されます。</p>
 
@@ -10,6 +10,11 @@
     <textarea name="sentence" rows="8" cols="80"></textarea><br>
     <input type="submit" value="登録">
 </form>
+<p>
+<% unless @texts %>
+<font color="red">141文字以上の文が含まれています。</font>
+<% end %>
+</p>
 <p><a href='/logout'>ログアウト</a></p>
 <ul>
     <p>ただいまの文章登録数: <%= @sentences.size %></p>
