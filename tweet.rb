@@ -233,7 +233,15 @@ class Tweet
     loop do
       text = connect(dic)
       tweets = from_sentence_to_tweets(text)
-      if (ret = tweets[rand(tweets.size)]).length <= TWEET_LIMIT - 3 -
+      next unless tweets
+      ret = tweets.sample
+      if ret.length <= TWEET_LIMIT - 80
+        # 吹き出しツイート
+        return "＿人人人人人人人人人人人人人人＿\n" +
+          (ret.length / 12).times.map{  '＞　' + ret.slice!(0, 12) + '　＜' }.join("\n") +
+          "\n＞　" + ret + '　' * (12 - ret.length) + "　＜\n" +
+          "￣Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y￣\n" + HASH_TAG
+      elsif ret.length <= TWEET_LIMIT - 3 -
         END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG.length
         return ret + "\n" + '#' + END_OF_MECAB_TWEET.sample + "\n" + HASH_TAG
       end

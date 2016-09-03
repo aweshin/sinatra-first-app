@@ -66,7 +66,7 @@ end
 
 get '/theme' do
   @title = 'テーマ番号登録'
-  @themes = Theme.all
+  @themes = Theme.order("id desc").all
   @new_theme_id = (theme = Theme.order("theme_id desc").first) ? theme.theme_id + 1 : 1
   erb :theme
 end
@@ -152,4 +152,8 @@ end
 
 get '/normal_tweet' do
   Tweet.new.normal_tweet
+end
+
+get '/mecab_tweet' do
+  Tweet.new.random_tweet_using_mecab
 end

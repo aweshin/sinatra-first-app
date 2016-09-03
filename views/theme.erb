@@ -1,6 +1,6 @@
 <h2>公開テーマ</h2>
 <select id="theme_id_select">
-<% @themes.reverse.each do |theme| %>
+<% @themes.each do |theme| %>
     <% if theme.open %>
     <option value="<%= theme.theme_id %>"><%= theme.theme_id %> </option>
     <% end %>
