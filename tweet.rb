@@ -72,7 +72,7 @@ class Tweet
 
   # 形態素解析して作文する
   def random_tweet_using_mecab
-    @texts.shuffle!
+    @texts = @texts.rotate(rand(@texts.size))[0, 100]
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     tweet = choose_sentence(dic)
@@ -224,7 +224,7 @@ class Tweet
     data.each_cons(3).each do |a|
       suffix = a.pop
       prefix = a
-      dic[prefix] << suffix
+      dic[prefix] << suffix unless dic[prefix].include?(suffix)
     end
   end
 
@@ -237,6 +237,7 @@ class Tweet
       ret = tweets.sample
       if ret.length <= TWEET_LIMIT - 80
         # 吹き出しツイート
+        ret.gsub!(/\n|\r/, '')
         return "＿人人人人人人人人人人人人人人＿\n" +
           (ret.length / 12).times.map{  '＞　' + ret.slice!(0, 12) + '　＜' }.join("\n") +
           "\n＞　" + ret + '　' * (12 - ret.length) + "　＜\n" +
