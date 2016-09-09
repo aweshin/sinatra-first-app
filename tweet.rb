@@ -15,7 +15,7 @@ INTERVAL = 12
 # テーマの終了記号
 END_OF_THEME = '─'
 # MECAB_TWEETの連続数
-SEQUENCE_OF_MECAB_TWEET = 2
+SEQUENCE_OF_MECAB_TWEET = 1
 # 再度ツイートする旧ツイートの範囲（逆数）
 INV_REUSE_RANGE = 10
 
@@ -55,7 +55,7 @@ class Tweet
         if tweet.media
           media_tweet(MediaTweet.where(tweet_id: tweet.id).map(&:media), t)
         else
-          if t[-1] == '】'
+          if t[-1] =~ /】|\!/
           # 分割ツイート
             text1, text2 = split_tweet(t)
             update(text1)
@@ -105,16 +105,12 @@ class Tweet
     end
   end
 
-  def is_words?(text)
-    !text[-1].match(/。|！|？|─/)
-  end
-
   # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
   def next_sentence_id
     current_id =
       Theme.find_by_sql("SELECT current_sentence_id FROM themes WHERE current_sentence_id > 0").map(&:current_sentence_id)[0]
 
-    if @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET).map{ |t| delete_https(t.text)[-1] == '】' }.any?
+    if @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET).map{ |t| delete_https(t.text)[-1] =~ /】|\!/ }.any?
       # mecab_tweet
       return
     else
