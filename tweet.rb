@@ -46,7 +46,7 @@ class Tweet
       # テーマの終わり
       if delete_https(tweets.last.text)[-1] == END_OF_THEME
         theme_no = choose_next_theme(Theme.find_by("current_sentence_id > 0").id, Theme.where(open: true).count)
-        tweets[-1].text += '次は【' + theme_no.to_s + '】'
+        tweets[-1].text += '次は' + theme_no
       else
         Theme.find_by("current_sentence_id > 0").update(current_sentence_id: Sentence.all.map(&:id).select{ |i| index < i }.min)
       end
@@ -137,13 +137,13 @@ class Tweet
     if next_id
       next_theme = Theme.find(next_id).theme_id
       Theme.find_by(id: next_id).update(current_sentence_id: func.call(next_theme))
-      return next_theme
+      return '【' + next_theme.to_s + '】' + 'new!'
     else
       range = size / INV_REUSE_RANGE
       next_theme = Theme.where(open: true).offset(rand(range)).first.theme_id
       Theme.find_by(theme_id: next_theme).destroy
       Theme.create({theme_id: next_theme, open: true, current_sentence_id: func.call(next_theme)})
-      return next_theme
+      return '【' + next_theme.to_s + '】'
     end
   end
 
