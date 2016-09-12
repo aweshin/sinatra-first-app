@@ -18,9 +18,11 @@
 <p><a href='/logout'>ログアウト</a></p>
 <ul>
     <p>ただいまのツイート登録数: <%= @tweets.size %></p>
+    <p>メディアツイート：●</p>
     <% @tweets.each do |tweet| %>
     <li data-id="<%= tweet.sentence_id %>">
         <%= tweet.text %>
+        <% if tweet.media %>●<% end %>
         <span class="deleteCmd" style="cursor:pointer;color:blue">[x]</span>
     </li>
     <% end %>
