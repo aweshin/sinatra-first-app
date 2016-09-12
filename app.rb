@@ -52,10 +52,10 @@ post '/new' do
     end
     # themesテーブルの初期化
     themes = Theme.where(open: true)
-    if themes && !themes.find_by("current_text_id > 0")
+    if themes && !themes.find_by("current_sentence_id > 0")
       query = '【' + themes.first.theme_id.to_s + '】' + '%'
       id = Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0]
-      themes.first.update(current_text_id: id)
+      themes.first.update(current_sentence_id: id)
     end
     redirect '/'
   else
