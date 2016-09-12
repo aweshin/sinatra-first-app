@@ -89,13 +89,18 @@ get '/media' do
 end
 
 post '/media_new' do
-  media = MediaTweet.create({with_media: params[:with_media], media: params[:media]})
+  phrase = params[:with_media]
+  id = Text.find_by_sql("SELECT * FROM texts WHERE text LIKE '%#{phrase}%'").map(&:id)[0]
+  media = MediaTweet.create({with_media: phrase, media: params[:media], tweet_id: id})
+  Text.find(id).update(media: true)
+
   redirect '/error' if media.errors.any?
   redirect '/'
 end
 
 post '/media_delete' do
   MediaTweet.find(params[:id]).destroy
+  Text.find(params[:id]).update(media: false)
 end
 
 get '/login' do

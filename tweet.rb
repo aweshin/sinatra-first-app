@@ -148,12 +148,17 @@ class Tweet
     s3 = Aws::S3::Client.new
     medias.each_with_index do |media, i|
       File.open(File.basename("hoge_#{i}.png"), 'w') do |file|
-        s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{media}") do |data|
-          file.write(data)
+        begin
+          s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{media}") do |data|
+            file.write(data)
+          end
+        rescue => e
+          STDERR.puts "[EXCEPTION] " + e.to_s
+          exit 1
         end
       end
     end
-
+    
     n = medias.size
     # 分割ツイート
     t1, t2 = split_tweet(tweet, MEDIA_URL_LENGTH * n)

@@ -22,7 +22,7 @@
     </tr>
     <% @medias.each do |media| %>
         <tr data-id="<%= media.id %>">
-            <td><input type="checkbox" class="delete"></td>
+            <td><span class="delete" style="cursor:pointer;color:blue">[x]</span></td>
             <td><%= media.with_media %></td>
             <td><%= media.media %></td>
         </tr>
@@ -33,16 +33,14 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 <script>
-     $('.delete').change(function() {
-        if ($(this).is(':checked')) {
-            if (confirm('are you sure to delete?')) {
-                var el = $(this).parent().parent();
-                $.post('/media_delete', {
-                    id: el.data('id')
-                }, function() {
-                    el.fadeOut(800);
-                });
-            }
+     $('.delete').click(function() {
+        if (confirm('are you sure to delete?')) {
+            var el = $(this).parent().parent();
+            $.post('/media_delete', {
+                id: el.data('id')
+            }, function() {
+                el.fadeOut(800);
+            });
         }
     })
 </script>
