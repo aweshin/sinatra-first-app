@@ -46,7 +46,7 @@ class Tweet
       # テーマの終わり
       if delete_https(tweets.last.text)[-1] == END_OF_THEME
         theme_no = choose_next_theme(Theme.find_by("current_sentence_id > 0").id, Theme.where(open: true).count)
-        tweets[-1].text += '次は' + theme_no
+        tweets[-1].text += '次は' + theme_no if theme_no
       else
         Theme.find_by("current_sentence_id > 0").update(current_sentence_id: Sentence.all.map(&:id).select{ |i| index < i }.min)
       end
@@ -55,7 +55,7 @@ class Tweet
         if tweet.media
           media_tweet(MediaTweet.where(tweet_id: tweet.id).map(&:media), t)
         else
-          if t[-1] =~ /】|\!/
+          if t[-1] == '!'
           # 分割ツイート
             text1, text2 = split_tweet(t)
             update(text1)
@@ -110,7 +110,7 @@ class Tweet
     current_id =
       Theme.find_by_sql("SELECT current_sentence_id FROM themes WHERE current_sentence_id > 0").map(&:current_sentence_id)[0]
 
-    if @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET).map{ |t| delete_https(t.text)[-1] =~ /】|\!/ }.any?
+    if @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET).map{ |t| delete_https(t.text)[-1] =~ /#{END_OF_THEME}|\!/ }.any?
       # mecab_tweet
       return
     else
@@ -139,7 +139,7 @@ class Tweet
       next_theme = Theme.where(open: true).offset(rand(range)).first.theme_id
       Theme.find_by(theme_id: next_theme).destroy
       Theme.create({theme_id: next_theme, open: true, current_sentence_id: func.call(next_theme)})
-      return '【' + next_theme.to_s + '】'
+      return
     end
   end
 
