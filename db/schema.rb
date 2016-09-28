@@ -35,7 +35,7 @@ ActiveRecord::Schema.define(version: 20160928041029) do
   create_table "themes", id: false, force: :cascade do |t|
     t.integer "theme_id"
     t.boolean "open",            default: true
-    t.integer "current_text_id"
+    t.integer "current_sentence_id"
   end
 
   create_table "users", force: :cascade do |t|
