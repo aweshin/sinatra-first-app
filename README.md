@@ -29,7 +29,7 @@ Then, migrate with the database.
     $ heroku run bundle exec rake db:migrate
     
 
-This app need to Mecab engine.
+This app needs Mecab engine.
 
     $ heroku config:set \
         BUILDPACK_URL=https://github.com/diasks2/heroku-buildpack-mecab.git\
