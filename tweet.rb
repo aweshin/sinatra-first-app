@@ -14,10 +14,7 @@ URL_LENGTH = 23
 INTERVAL = 12
 # テーマの終了記号
 END_OF_THEME = '─'
-# MECAB_TWEETの連続数
-SEQUENCE_OF_MECAB_TWEET = 1
-# 大野一雄&土方巽の言葉をremixして連続ツイート
-SEQUENCE_OF_KT_REMIX = 1
+
 # 再度ツイートする旧ツイートの範囲（逆数）
 INV_REUSE_RANGE = 10
 
@@ -27,8 +24,12 @@ END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…'
                'ここから経験を立ち上げる', 'ああ…',
                'じっと手を見る', 'ことばのカタルシス', 'ちょっと危険',
                'そっとささやく', "#{(rand(1..100) ** 2) / 100}点"]
-HASH_TAG_MECAB = '#ほぼ駄文ですが'
 
+# MECAB_TWEETの連続数
+SEQUENCE_OF_MECAB_TWEET = 1
+# 大野一雄&土方巽の言葉をremixして連続ツイート
+SEQUENCE_OF_KT_REMIX = 1
+HASH_TAG_MECAB = '#ほぼ駄文ですが'
 HASH_TAG_KT = '#KT_REMIX'
 
 class Tweet
@@ -123,7 +124,8 @@ class Tweet
     current_id =
       Theme.find_by_sql("SELECT current_sentence_id FROM themes WHERE current_sentence_id > 0").map(&:current_sentence_id)[0]
 
-    if @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET).map{ |t| delete_https(t.text)[-1] =~ /#{END_OF_THEME}|\!/ }.any?
+    # if @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET).map{ |t| delete_https(t.text)[-1] =~ /#{END_OF_THEME}|\!/ }.any?
+    if @client.user_timeline(count: SEQUENCE_OF_KT_REMIX).map{ |t| delete_https(t.text)[-1] =~ /#{END_OF_THEME}|\!/ }.any?
       # mecab_tweet
       return
     else
