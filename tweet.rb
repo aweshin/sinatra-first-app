@@ -87,6 +87,7 @@ class Tweet
 
   def random_tweet_kt_remix
     @texts = OhnoHijikata.all.map(&:sentence)
+    @texts.rotate!(rand(@texts.size))
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     tweet = choose_sentence(dic)
