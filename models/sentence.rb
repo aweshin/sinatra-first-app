@@ -27,6 +27,10 @@ class MediaTweet < ActiveRecord::Base
   validates :media, presence: true
 end
 
+class OhnoHijikata < ActiveRecord::Base
+  validates :sentence, presence: true
+end
+
 class User < ActiveRecord::Base
   validates :name, presence: { message: "入力してください。" }
   validates :salt, presence: { message: "入力してください。" }

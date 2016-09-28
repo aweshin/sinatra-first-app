@@ -16,6 +16,8 @@ INTERVAL = 12
 END_OF_THEME = '─'
 # MECAB_TWEETの連続数
 SEQUENCE_OF_MECAB_TWEET = 1
+# 大野一雄&土方巽の言葉をremixして連続ツイート
+SEQUENCE_OF_KT_REMIX = 1
 # 再度ツイートする旧ツイートの範囲（逆数）
 INV_REUSE_RANGE = 10
 
@@ -25,7 +27,9 @@ END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…'
                'ここから経験を立ち上げる', 'ああ…',
                'じっと手を見る', 'ことばのカタルシス', 'ちょっと危険',
                'そっとささやく', "#{(rand(1..100) ** 2) / 100}点"]
-HASH_TAG = '#ほぼ駄文ですが'
+HASH_TAG_MECAB = '#ほぼ駄文ですが'
+
+HASH_TAG_KT = '#KT_REMIX'
 
 class Tweet
   def initialize
@@ -66,13 +70,22 @@ class Tweet
         end
       end
     else
-      random_tweet_using_mecab
+      # random_tweet_using_mecab
+      random_tweet_kt_remix
     end
   end
 
   # 形態素解析して作文する
   def random_tweet_using_mecab
     @texts = @texts.rotate(rand(@texts.size))[0, 100]
+    dic = Hash.new { |hash, key| hash[key] = [] }
+    make_dic(dic)
+    tweet = choose_sentence(dic)
+    update(tweet)
+  end
+
+  def random_tweet_kt_remix
+    @texts = OhnoHijikata.all.map(&:sentence)
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     tweet = choose_sentence(dic)
@@ -236,16 +249,19 @@ class Tweet
       tweets = from_sentence_to_tweets(text)
       next unless tweets
       ret = tweets.sample
-      if ret.length <= TWEET_LIMIT - 80
-        # 吹き出しツイート
-        ret.gsub!(/\n|\r/, '')
-        return "＿人人人人人人人人人人人人人人＿\n" +
-          (ret.length / 12).times.map{  '＞　' + ret.slice!(0, 12) + '　＜' }.join("\n") +
-          "\n＞　" + ret + '　' * (12 - ret.length) + "　＜\n" +
-          "￣Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y￣\n" + HASH_TAG
-      elsif ret.length <= TWEET_LIMIT - 3 -
-        END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG.length
-        return ret + "\n" + '#' + END_OF_MECAB_TWEET.sample + "\n" + HASH_TAG
+      # if ret.length <= TWEET_LIMIT - 80
+      #   # 吹き出しツイート
+      #   ret.gsub!(/\n|\r/, '')
+      #   return "＿人人人人人人人人人人人人人人＿\n" +
+      #     (ret.length / 12).times.map{  '＞　' + ret.slice!(0, 12) + '　＜' }.join("\n") +
+      #     "\n＞　" + ret + '　' * (12 - ret.length) + "　＜\n" +
+      #     "￣Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y￣\n" + HASH_TAG_MECAB
+      # elsif ret.length <= TWEET_LIMIT - 3 -
+      #   END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG_MECAB.length
+      #   return ret + "\n" + '#' + END_OF_MECAB_TWEET.sample + "\n" + HASH_TAG_MECAB
+      # end
+      if ret.length <= TWEET_LIMIT - 1 - HASH_TAG_KT.length
+        return ret + "\n" + HASH_TAG_KT
       end
     end
   end

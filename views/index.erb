@@ -3,11 +3,14 @@
 <p><a href="/media">2.(もしあれば）メディアツイート登録へ</a></p>
 <p>3.文章をここに記入してください。<br>
 ただし、141字以上の文は、文を区切って再登録してください。<br>
-また、１テーマごとに、【#テーマ番号】からはじめ、──で終えてください。<br>
+また、１テーマごとに、【テーマID】からはじめ、──で終えてください。<br>
+（ただし、大野一雄or土方巽の文章登録の場合は入りません）<br>
 登録文章に改行が含まれていると、改行もツイートに反映されます。</p>
 
 <form method="post" action="/new">
     <textarea name="sentence" rows="8" cols="80"></textarea><br>
+    <p><input type="radio" name="normal" value="on" checked="checked">通常
+    <input type="radio" name="normal" value="off">大野一雄or土方巽</p>
     <input type="submit" value="登録">
 </form>
 <p>

@@ -33,29 +33,33 @@ post '/new' do
   st = params[:sentence]
   @texts = Tweet.new.from_sentence_to_tweets(st.dup)
   if @texts && @texts[0] != "\n"
-    sentence = Sentence.create({sentence: st})
-    @texts.each do |t|
-      flag = false
-      target_medias = []
-      MediaTweet.all.each do |m|
-        if t.include?(m.with_media)
-          target_medias << m
-          flag = true
+    if params[:normal] == 'on'
+      sentence = Sentence.create({sentence: st})
+      @texts.each do |t|
+        flag = false
+        target_medias = []
+        MediaTweet.all.each do |m|
+          if t.include?(m.with_media)
+            target_medias << m
+            flag = true
+          end
         end
+        text = Text.create({text: t, media: flag, sentence_id: sentence.id})
+        target_medias.map{ |m| m.update(tweet_id: text.id)}
       end
-      text = Text.create({text: t, media: flag, sentence_id: sentence.id})
-      target_medias.map{ |m| m.update(tweet_id: text.id)}
-    end
-    # theme_id登録（していなかったとき）
-    if (md = st[0,6].match(/【(\d+)】/)) && !Theme.find_by(theme_id: md[1].to_i)
-      Theme.create({ theme_id: md[1].to_i, open: true })
-    end
-    # themesテーブルの初期化
-    themes = Theme.where(open: true)
-    if themes && !themes.find_by("current_sentence_id > 0")
-      query = '【' + themes.first.theme_id.to_s + '】' + '%'
-      id = Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0]
-      themes.first.update(current_sentence_id: id)
+      # theme_id登録（していなかったとき）
+      if (md = st[0,6].match(/【(\d+)】/)) && !Theme.find_by(theme_id: md[1].to_i)
+        Theme.create({ theme_id: md[1].to_i, open: true })
+      end
+      # themesテーブルの初期化
+      themes = Theme.where(open: true)
+      if themes && !themes.find_by("current_sentence_id > 0")
+        query = '【' + themes.first.theme_id.to_s + '】' + '%'
+        id = Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0]
+        themes.first.update(current_sentence_id: id)
+      end
+    else
+      OhnoHijikata.create({sentence: st})
     end
     redirect '/'
   else
