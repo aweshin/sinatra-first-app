@@ -30,6 +30,7 @@ Then, migrate with the database.
     
 
 This app need to Mecab engine.
+
     $ heroku config:set \
         BUILDPACK_URL=https://github.com/diasks2/heroku-buildpack-mecab.git\
         LD_LIBRARY_PATH=/app/vendor/mecab/lib\
