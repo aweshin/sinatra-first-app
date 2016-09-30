@@ -1,13 +1,9 @@
-<h2>公開テーマ</h2>
-<select id="theme_id_select">
-<% @themes.each do |theme| %>
-    <% if theme.open %>
-    <option value="<%= theme.theme_id %>"><%= theme.theme_id %> </option>
-    <% end %>
-<% end %>
-</select>
-<br>
-<h2>テーマIDを登録する（変更も可能）</h2>
+
+<h2>テーマID</h2>
+<p>
+Box内は最新登録番号です。<br>
+公開可否の変更も可能です。
+</p>
 <form method="post" action="/theme_new">
     <p>
     <input type="text" name="theme_id" class="theme_id" value="<%= @new_theme_id %>">
@@ -16,6 +12,15 @@
     <input type="submit" value="登録">
     </p>
 </form>
+<br>
+<p>公開テーマ</p>
+<select id="theme_id_select">
+<% @themes.each do |theme| %>
+    <% if theme.open %>
+    <option value="<%= theme.theme_id %>"><%= theme.theme_id %> </option>
+    <% end %>
+<% end %>
+</select>
 
 <p><a href="/">戻る</a></p>
 
