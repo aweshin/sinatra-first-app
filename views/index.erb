@@ -1,16 +1,42 @@
 <h2>Twitter botを作成</h2>
-<p><a href="/theme">1.テーマID登録</a></p>
-<p><a href="/media">2.(もしあれば）メディアツイート登録へ</a></p>
-<p>3.文章をここに記入してください。<br>
+<table border="1" cellspacing="0" bordercolor="#000000">
+    <tr>
+        <th>種別</th>
+        <th>ボットのつぶやき方</th>
+        <th>内容</th>
+        <th>テーマID</th>
+        <th>メディアツイート登録</th>
+    </tr>
+    <tr>
+        <td>通常</td>
+        <td>登録テーマ毎</td>
+        <td>登録文そのもの</td>
+        <td><a href="/theme">登録・変更︎</a></td>
+        <td><a href="/media">登録・削除</a></td>
+    </tr>
+    <tr>
+        <td>シャッフル</td>
+        <td>テーマ間</td>
+        <td>リミックス</td>
+        <td></td>
+        <td></td>
+    </tr>
+</table>
+
+<p>
+<b>文章をここに記入してください。</b><br>
+登録文章に改行が含まれていると、改行もツイートに反映されます。<br>
 ただし、141字以上の文は、文を区切って再登録してください。<br>
 また、１テーマごとに、【テーマID】からはじめ、──で終えてください。<br>
-（ただし、大野一雄or土方巽の文章登録の場合は要りません）<br>
-登録文章に改行が含まれていると、改行もツイートに反映されます。</p>
+（「シャッフル」の登録の場合は要りません）<br>
+</p>
 
 <form method="post" action="/new">
     <textarea name="sentence" rows="8" cols="80"></textarea><br>
-    <p><input type="radio" name="normal" value="on" checked="checked">通常
-    <input type="radio" name="normal" value="off">大野一雄or土方巽</p>
+    <p>
+    <input type="radio" name="normal" value="on" checked="checked">通常
+    <input type="radio" name="normal" value="off">シャッフル
+    </p>
     <input type="submit" value="登録">
 </form>
 <p>
