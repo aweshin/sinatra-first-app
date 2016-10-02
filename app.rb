@@ -23,6 +23,7 @@ get '/' do
     @title = '文章登録'
     @tweets = Text.order("id desc").all
     @texts = @tweets.last.text # ダミー
+    @twice = false
     erb :index
   else
     redirect '/login'
@@ -58,10 +59,18 @@ post '/new' do
         id = Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0]
         themes.first.update(current_sentence_id: id)
       end
+      redirect '/'
     else
-      Shuffle.create({sentence: st}) if Shuffle.all.map(&:sentence).map{ |s| !s.include?(st) }.all?
+      if Shuffle.all.map(&:sentence).map{ |s| !s.include?(st.gsub(/\n/, '')) }.all?
+        Shuffle.create({sentence: st})
+        redirect '/'
+      else
+        @twice = true
+        @title = '文章登録'
+        @tweets = Text.order("id desc").all
+        erb :index
+      end
     end
-    redirect '/'
   else
     @title = '文章登録'
     @tweets = Text.order("id desc").all
