@@ -28,6 +28,7 @@ Then, migrate with the database.
 
     $ heroku run bundle exec rake db:migrate
     
+## Heroku settings
 
 This app needs Mecab engine.
 

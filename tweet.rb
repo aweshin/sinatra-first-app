@@ -19,17 +19,17 @@ END_OF_THEME = '─'
 INV_REUSE_RANGE = 10
 
 # mecabツイートの語尾
-END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…',
-               'パラレルワールドみたいな', 'ちょっとしたファンタジー',
-               'ここから経験を立ち上げる', 'ああ…',
-               'じっと手を見る', 'ことばのカタルシス', 'ちょっと危険',
-               'そっとささやく', "#{(rand(1..100) ** 2) / 100}点"]
+# END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…',
+#                'パラレルワールドみたいな', 'ちょっとしたファンタジー',
+#                'ここから経験を立ち上げる', 'ああ…',
+#                'じっと手を見る', 'ことばのカタルシス', 'ちょっと危険',
+#                'そっとささやく', "#{(rand(1..100) ** 2) / 100}点"]
 
 # MECAB_TWEETの連続数
 SEQUENCE_OF_MECAB_TWEET = 1
 # 大野一雄&土方巽の言葉をremixして連続ツイート
 SEQUENCE_OF_KT_REMIX = 1
-HASH_TAG_MECAB = '#ほぼ駄文ですが'
+# HASH_TAG_MECAB = '#ほぼ駄文ですが'
 HASH_TAG_KT = '#KT_REMIX'
 
 class Tweet
@@ -86,7 +86,7 @@ class Tweet
   end
 
   def random_tweet_kt_remix
-    @texts = OhnoHijikata.all.map(&:sentence)
+    @texts = Shuffle.all.map(&:sentence)
     @texts.rotate!(rand(@texts.size))
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)

@@ -18,7 +18,7 @@ ActiveRecord::Schema.define(version: 20160928041029) do
     t.integer "tweet_id"
   end
 
-  create_table "ohno_hijikata", force: :cascade do |t|
+  create_table "shuffles", force: :cascade do |t|
     t.string "sentence"
   end
 

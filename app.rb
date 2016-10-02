@@ -59,7 +59,7 @@ post '/new' do
         themes.first.update(current_sentence_id: id)
       end
     else
-      OhnoHijikata.create({sentence: st})
+      Shuffle.create({sentence: st}) if Shuffle.all.map(&:sentence).map{ |s| !s.include?(st) }.all?
     end
     redirect '/'
   else
@@ -174,6 +174,3 @@ get '/normal_tweet' do
   Tweet.new.normal_tweet
 end
 
-get '/mecab_tweet' do
-  Tweet.new.random_tweet_using_mecab
-end

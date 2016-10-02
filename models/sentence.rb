@@ -27,7 +27,7 @@ class MediaTweet < ActiveRecord::Base
   validates :media, presence: true
 end
 
-class OhnoHijikata < ActiveRecord::Base
+class Shuffle < ActiveRecord::Base
   validates :sentence, presence: true
 end
 
