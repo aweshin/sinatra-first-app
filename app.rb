@@ -61,7 +61,9 @@ post '/new' do
       end
       redirect '/'
     else
-      if Shuffle.all.map(&:sentence).map{ |s| !s.include?(st.gsub(/\n/, '')) }.all?
+      japanese_regex = /[\p{Han}\p{Hiragana}\p{Katakana}，．、。ー・]+/
+      japanese_words = st.scan(japanese_regex).join
+      if Shuffle.all.map(&:sentence).map{ |s| !s.include?(japanese_words) }.all?
         Shuffle.create({sentence: st})
         redirect '/'
       else
