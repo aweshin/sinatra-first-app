@@ -42,11 +42,12 @@
 </form>
 
 <p>
-<% unless @texts %>
+<% if !@texts %>
 <font color="red">141文字以上の文が含まれています。</font>
-<% end %>
-<% if @twice %>
+<% elsif @twice %>
 <font color="red">重複登録です</font>
+<% else %>
+<font color="magenta">登録しました</font>
 <% end %>
 </p>
 
