@@ -47,3 +47,4 @@ You should set up following heroku config vars.
     $ heroku config:set TWITTER_ACCESS_TOKEN_SECRET=xxxxxxxxx
     $ heroku config:set TWITTER_CONSUMER_KEY=xxxxxxxxx
     $ heroku config:set TWITTER_CONSUMER_SECRET=xxxxxxxxx
+    $ heroku addons:add scheduler:standard

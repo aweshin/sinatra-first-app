@@ -24,6 +24,7 @@ get '/' do
     @tweets = Text.order("id desc").all
     @texts = @tweets.last.text # ダミー
     @twice = false
+    @done = false
     erb :index
   else
     redirect '/login'
@@ -59,13 +60,19 @@ post '/new' do
         id = Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0]
         themes.first.update(current_sentence_id: id)
       end
-      redirect '/'
+      @done = true
+      @title = '文章登録'
+      @tweets = Text.order("id desc").all
+      erb :index
     else
       japanese_regex = /[\p{Han}\p{Hiragana}\p{Katakana}，．、。ー・]+/
       japanese_words = st.scan(japanese_regex).join
       if Shuffle.all.map(&:sentence).map{ |s| !s.include?(japanese_words) }.all?
         Shuffle.create({sentence: st})
-        redirect '/'
+        @done = true
+        @title = '文章登録'
+        @tweets = Text.order("id desc").all
+        erb :index
       else
         @twice = true
         @title = '文章登録'
