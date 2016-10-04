@@ -112,6 +112,12 @@ class Tweet
         Shuffle.create({sentence: t})
       end
     end
+    @client.user_timeline("@T_Hijikata_bot", {count: 30}).map{ |t| t.text }.each do |t|
+      next if t.match(HTTPS)
+      unless shuffles.include?(t)
+        Shuffle.create({sentence: t})
+      end
+    end
   end
 
   private
