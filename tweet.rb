@@ -32,7 +32,7 @@ SEQUENCE_OF_KT_REMIX = 1
 # HASH_TAG_MECAB = '#ほぼ駄文ですが'
 HASH_TAG_KT = '#KT_REMIX'
 
-JAPANESE_REGEX = /[\p{Han}\p{Hiragana}\p{Katakana}，．、。ー・]+/
+HTTPS = /\s?https?.+?[\n\s　]|\s?https?.+/
 
 class Tweet
   def initialize
@@ -105,10 +105,11 @@ class Tweet
   end
 
   def ohnokazuo
+    shuffles = Shuffle.all.map(&:sentence)
     @client.user_timeline("@ohnokazuo_bot", {count: 30}).map{ |t| t.text }.each do |t|
-      text = t.scan(JAPANESE_REGEX).join
-      if Shuffle.all.map(&:sentence).map{ |s| !s.include?(text) }.all?
-        Shuffle.create({sentence: text})
+      next if t.match(HTTPS)
+      unless shuffles.include?(t)
+        Shuffle.create({sentence: t})
       end
     end
   end
@@ -146,7 +147,7 @@ class Tweet
   end
 
   def delete_https(tweet)
-    tweet.gsub(/\s?https?.+?[\n\s　]|\s?https?.+/, '')
+    tweet.gsub(HTTPS, '')
   end
 
   # 新しいテーマを決める
@@ -218,7 +219,7 @@ class Tweet
   end
 
   def count_real_length(text)
-    http_tweets = text.scan(/https?.+?[\n\s　]|https?.+/)
+    http_tweets = text.scan(HTTPS)
     http_tweets_count = http_tweets.size
     http_tweets_length = http_tweets.reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
     URL_LENGTH * http_tweets_count - http_tweets_length
