@@ -192,3 +192,6 @@ get '/normal_tweet' do
   Tweet.new.normal_tweet
 end
 
+get '/ohnokazuo' do
+  Tweet.new.ohnokazuo
+end

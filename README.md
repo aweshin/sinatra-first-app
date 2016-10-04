@@ -37,7 +37,7 @@ This app needs Mecab engine.
         LD_LIBRARY_PATH=/app/vendor/mecab/lib\
         MECAB_PATH=/app/vendor/mecab/lib/libmecab.so
 
-You should set up following heroku config vars.
+You should set up following heroku config vars and add-ons.
 
     $ heroku config:set AWS_REGION=xxxxxxxx
     $ heroku config:set AWS_ACCESS_KEY_ID=xxxxxxxx
@@ -48,3 +48,7 @@ You should set up following heroku config vars.
     $ heroku config:set TWITTER_CONSUMER_KEY=xxxxxxxxx
     $ heroku config:set TWITTER_CONSUMER_SECRET=xxxxxxxxx
     $ heroku addons:add scheduler:standard
+
+Please select "Add new job" on https://scheduler.heroku.com/dashboard to set up Heroku Scheduler.  
+Then, fill in the "TASK" blank with "bundle exec ruby task.rb".  
+You can choose "daily", "hourly" or "10 minutes" at the "Task frequency".

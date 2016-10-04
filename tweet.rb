@@ -32,6 +32,8 @@ SEQUENCE_OF_KT_REMIX = 1
 # HASH_TAG_MECAB = '#ほぼ駄文ですが'
 HASH_TAG_KT = '#KT_REMIX'
 
+JAPANESE_REGEX = /[\p{Han}\p{Hiragana}\p{Katakana}，．、。ー・]+/
+
 class Tweet
   def initialize
     @texts = Text.all.map(&:text)
@@ -100,6 +102,15 @@ class Tweet
     text.gsub!(/\n+\z/, '')
     text << "\n" unless text[-1] =~ /。|！|？|─/
     slice_text(text)
+  end
+
+  def ohnokazuo
+    @client.user_timeline("@ohnokazuo_bot", {count: 30}).map{ |t| t.text }.each do |t|
+      text = t.scan(JAPANESE_REGEX).join
+      if Shuffle.all.map(&:sentence).map{ |s| !s.include?(text) }.all?
+        Shuffle.create({sentence: text})
+      end
+    end
   end
 
   private
