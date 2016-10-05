@@ -52,3 +52,5 @@ You should set up following heroku config vars and add-ons.
 Please select "Add new job" on https://scheduler.heroku.com/dashboard to set up Heroku Scheduler.  
 Then, fill in the "TASK" blank with "bundle exec ruby task.rb".  
 You can choose "daily", "hourly" or "10 minutes" at the "Task frequency".
+
+If you want to tweet with media(.png/.gif), please sign up aws (example for japanese https://aws.amazon.com/jp/register-flow/) and then make a bucket(bucket name should be registered on your heroku configs.) and make a folder "/media" on the s3 service.
