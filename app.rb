@@ -110,7 +110,7 @@ post '/theme_new' do
   else
     target_theme.update(open: params[:open] == 'on')
   end
-  redirect '/'
+  redirect '/theme'
 end
 
 get '/media' do
@@ -127,7 +127,7 @@ post '/media_new' do
   Text.find(id).update(media: true)
 
   redirect '/error' if media.errors.any?
-  redirect '/'
+  redirect '/media'
 end
 
 post '/media_delete' do
