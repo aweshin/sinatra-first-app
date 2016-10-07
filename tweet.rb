@@ -104,7 +104,7 @@ class Tweet
     slice_text(text)
   end
 
-  def ohnokazuo
+  def pull_users_timeline
     shuffles = Shuffle.all.map(&:sentence)
     @client.user_timeline("@ohnokazuo_bot", {count: 30}).map{ |t| t.text }.each do |t|
       next if t.match(HTTPS)
@@ -234,6 +234,7 @@ class Tweet
   def update(tweet, media = nil)
     begin
       media ? @client.update(tweet, media) : @client.update(tweet)
+      sleep(1)
     rescue => e
       STDERR.puts "[EXCEPTION] " + e.to_s
       exit 1

@@ -33,12 +33,12 @@
 </p>
 
 <form method="post" action="/new">
-    <textarea name="sentence" rows="8" cols="80"></textarea><br>
+    <textarea name="sentence" rows="8" cols="80"><% if @theme_no %>【<%= @theme_no %>】<% end %></textarea><br>
     <p>
-    <input type="radio" name="normal" value="on" checked="checked">通常
-    <input type="radio" name="normal" value="off">シャッフル
+    <input type="radio" name="normal" value="on" checked="checked" />通常
+    <input type="radio" name="normal" value="off" />シャッフル
     </p>
-    <input type="submit" value="登録">
+    <input type="submit" value="登録" />
 </form>
 
 <p>

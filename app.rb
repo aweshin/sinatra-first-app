@@ -22,9 +22,10 @@ get '/' do
   if login?
     @title = '文章登録'
     @tweets = Text.order("id desc").all
-    @texts = @tweets.last.text # ダミー
+    @texts = '' # ダミー
     @twice = false
     @done = false
+    @theme_no = nil
     erb :index
   else
     redirect '/login'
@@ -107,10 +108,14 @@ post '/theme_new' do
   unless target_theme
     theme = Theme.create({theme_id: params[:theme_id], open: params[:open] == 'on'})
     redirect '/error' if theme.errors.any?
+    @theme_no = params[:theme_id]
   else
     target_theme.update(open: params[:open] == 'on')
   end
-  redirect '/theme'
+  @tweets = Text.order("id desc").all
+  @texts = '' # ダミー
+  @title = '文章登録'
+  erb :index
 end
 
 get '/media' do
@@ -193,6 +198,6 @@ get '/normal_tweet' do
   Tweet.new.normal_tweet
 end
 
-get '/ohnokazuo' do
-  Tweet.new.ohnokazuo
+get '/pull_users_timeline' do
+  Tweet.new.pull_users_timeline
 end
