@@ -72,16 +72,6 @@ class Tweet
     end
   end
 
-  # 形態素解析して作文する
-  def random_tweet_remix
-    @texts = Shuffle.all.map(&:sentence)
-    @texts.rotate!(rand(@texts.size))
-    dic = Hash.new { |hash, key| hash[key] = [] }
-    make_dic(dic)
-    tweet = choose_sentence(dic)
-    update(tweet)
-  end
-
   # TWEET_LIMIT以内で文章を切る。
   def from_sentence_to_tweets(text)
     # 句点（に準ずるもの）と改行文字で文章を区切る。
@@ -91,6 +81,16 @@ class Tweet
   end
 
   private
+
+  # 形態素解析して作文する
+  def random_tweet_remix
+    @texts = Shuffle.all.map(&:sentence)
+    @texts.rotate!(rand(@texts.size))
+    dic = Hash.new { |hash, key| hash[key] = [] }
+    make_dic(dic)
+    tweet = choose_sentence(dic)
+    update(tweet)
+  end
 
   def slice_text(text)
     ret = []
