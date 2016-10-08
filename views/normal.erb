@@ -1,0 +1,55 @@
+<h3>1.通常</h3>
+登録文章に改行が含まれていると、改行もツイートに反映されます。<br>
+ただし、141字以上の文は、文を区切って再登録してください。<br>
+また、１テーマごとに、【テーマID】からはじめ、──で終えてください。<br>
+（「シャッフル」の登録の場合は要りません）<br>
+<br>
+<b>文章をここに記入してください。</b><br>
+</p>
+
+<form method="post" action="/new">
+    <textarea name="sentence" rows="8" cols="80"><% if @theme_no %>【<%= @theme_no %>】<% end %></textarea><br>
+    <input type="submit" value="登録" />
+</form>
+
+<p>
+<% if !@texts %>
+<font color="red">141文字以上の文が含まれています。</font>
+<% end %>
+<% if @done %>
+<font color="magenta">登録しました</font>
+<% end %>
+</p>
+
+<p>
+<a href="/">戻る</a>
+</p>
+
+
+
+<ul>
+    <p>ただいまの通常ツイート登録数: <%= @tweets ? @tweets.size : 0 %></p>
+    <p>メディアツイート：●</p>
+        <% if @tweets %>
+            <% @tweets.each do |tweet| %>
+            <li data-id="<%= tweet.sentence_id %>">
+                <%= tweet.text %>
+                <% if tweet.media %>●<% end %>
+                <span class="deleteCmd" style="cursor:pointer;color:blue">[x]</span>
+            </li>
+            <% end %>
+        <% end %>
+</ul>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script>
+    $('.deleteCmd').click(function() {
+        var el = $(this).parent();
+        if (confirm('are you sure to delete?')) {
+            $.post('/delete', {
+                id: el.data('id')
+            }, function() {
+                el.fadeOut(800);
+            });
+        }
+    })
+</script>

@@ -20,71 +20,81 @@ end
 
 get '/' do
   if login?
-    @title = '文章登録'
-    @tweets = Text.order("id desc").all
-    @texts = '' # ダミー
-    @twice = false
-    @done = false
-    @theme_no = nil
+    @title = 'Twitter bot'
     erb :index
   else
     redirect '/login'
   end
 end
 
+get '/normal' do
+  @title = '通常ツイート'
+  @texts = '' # ダミー
+  @tweets = Text.order("id desc").all
+  @theme_no = session[:theme_id]
+  session[:theme_id] = nil
+  @done = session[:done]
+  session[:done] = false
+  erb :normal
+end
+
+get '/shuffle' do
+  @title = 'REMIX'
+  @done = session[:done]
+  session[:done] = false
+  erb :shuffle
+end
+
 post '/new' do
   st = params[:sentence]
   @texts = Tweet.new.from_sentence_to_tweets(st.dup)
   if @texts && @texts[0] != "\n"
-    if params[:normal] == 'on'
-      sentence = Sentence.create({sentence: st})
-      @texts.each do |t|
-        flag = false
-        target_medias = []
-        MediaTweet.all.each do |m|
-          if t.include?(m.with_media)
-            target_medias << m
-            flag = true
-          end
+    sentence = Sentence.create({sentence: st})
+    @texts.each do |t|
+      flag = false
+      target_medias = []
+      MediaTweet.all.each do |m|
+        if t.include?(m.with_media)
+          target_medias << m
+          flag = true
         end
-        text = Text.create({text: t, media: flag, sentence_id: sentence.id})
-        target_medias.map{ |m| m.update(tweet_id: text.id)}
       end
-      # theme_id登録（していなかったとき）
-      if (md = st[0,6].match(/【(\d+)】/)) && !Theme.find_by(theme_id: md[1].to_i)
-        Theme.create({ theme_id: md[1].to_i, open: true })
-      end
-      # themesテーブルの初期化
-      themes = Theme.where(open: true)
-      if themes && !themes.find_by("current_sentence_id > 0")
-        query = '【' + themes.first.theme_id.to_s + '】' + '%'
-        id = Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0]
-        themes.first.update(current_sentence_id: id)
-      end
-      @done = true
-      @title = '文章登録'
-      @tweets = Text.order("id desc").all
-      erb :index
-    else
-      japanese_regex = /[\p{Han}\p{Hiragana}\p{Katakana}，．、。ー・]+/
-      japanese_words = st.scan(japanese_regex).join
-      if Shuffle.all.map(&:sentence).map{ |s| !s.include?(japanese_words) }.all?
-        Shuffle.create({sentence: st})
-        @done = true
-        @title = '文章登録'
-        @tweets = Text.order("id desc").all
-        erb :index
-      else
-        @twice = true
-        @title = '文章登録'
-        @tweets = Text.order("id desc").all
-        erb :index
+      text = Text.create({text: t, media: flag, sentence_id: sentence.id})
+      target_medias.map{ |m| m.update(tweet_id: text.id)}
+    end
+    # theme_id登録（していなかったとき）
+    if (md = st[0,6].match(/【(\d+)】/)) && !Theme.find_by(theme_id: md[1].to_i)
+      Theme.create({ theme_id: md[1].to_i, open: true })
+    end
+    # themesテーブルの初期化
+    themes = Theme.where(open: true)
+    if themes && !themes.find_by("current_sentence_id > 0")
+      query = '【' + themes.first.theme_id.to_s + '】' + '%'
+      id = Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0]
+      themes.first.update(current_sentence_id: id)
+    end
+    session[:done] = true
+    redirect '/normal'
+  else
+    redirect '/error'
+  end
+end
+
+post '/shuffle_new' do
+  user = params[:user]
+  count = params[:count].to_i
+  if user && 0 < count && count <= 200
+    shuffles = Shuffle.all.map(&:sentence)
+    Tweet.new.client.user_timeline("@" + user, { count: count }).map{ |t| t.text }.each do |t|
+      next if t.match(HTTPS)
+      unless shuffles.include?(t)
+        Shuffle.create({sentence: t})
       end
     end
+    session[:done] = true
+    redirect '/shuffle'
   else
-    @title = '文章登録'
-    @tweets = Text.order("id desc").all
-    erb :index
+    redirect '/error'
   end
 end
 
@@ -94,6 +104,7 @@ post '/delete' do
     Theme.find_by(theme_id: md[1].to_i).destroy
   end
   st.destroy
+  redirect '/normal'
 end
 
 get '/theme' do
@@ -108,14 +119,11 @@ post '/theme_new' do
   unless target_theme
     theme = Theme.create({theme_id: params[:theme_id], open: params[:open] == 'on'})
     redirect '/error' if theme.errors.any?
-    @theme_no = params[:theme_id]
+    session[:theme_id] = params[:theme_id]
   else
     target_theme.update(open: params[:open] == 'on')
   end
-  @tweets = Text.order("id desc").all
-  @texts = '' # ダミー
-  @title = '文章登録'
-  erb :index
+  redirect '/normal'
 end
 
 get '/media' do
@@ -140,6 +148,7 @@ post '/media_delete' do
   t = Text.find_by(id: mt.tweet_id)
   t.update(media: false) if t
   mt.destroy
+  redirect '/media'
 end
 
 get '/login' do
@@ -157,7 +166,7 @@ post '/login' do
     session[:username] = params[:name]
     redirect '/'
   else
-    erb :error
+    redirect '/error'
   end
 end
 
@@ -184,20 +193,11 @@ post '/signup' do
     session[:username] = params[:name]
     redirect '/'
   else
-    erb :signup
+    redirect '/signup'
   end
 end
 
 get '/error' do
   @title = 'エラー'
   erb :error
-end
-
-
-get '/normal_tweet' do
-  Tweet.new.normal_tweet
-end
-
-get '/pull_users_timeline' do
-  Tweet.new.pull_users_timeline
 end

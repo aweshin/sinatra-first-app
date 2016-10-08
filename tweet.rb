@@ -18,13 +18,6 @@ END_OF_THEME = '─'
 # 再度ツイートする旧ツイートの範囲（逆数）
 INV_REUSE_RANGE = 10
 
-# mecabツイートの語尾
-# END_OF_MECAB_TWEET = ['なんてね', 'とか言ってみる', 'ふむふむ…',
-#                'パラレルワールドみたいな', 'ちょっとしたファンタジー',
-#                'ここから経験を立ち上げる', 'ああ…',
-#                'じっと手を見る', 'ことばのカタルシス', 'ちょっと危険',
-#                'そっとささやく', "#{(rand(1..100) ** 2) / 100}点"]
-
 # MECAB_TWEETの連続数
 SEQUENCE_OF_MECAB_TWEET = 1
 # 大野一雄&土方巽の言葉をremixして連続ツイート
@@ -35,6 +28,8 @@ HASH_TAG_KT = '#KT_REMIX'
 HTTPS = /\s?https?.+?[\n\s　]|\s?https?.+/
 
 class Tweet
+  attr_reader :client
+
   def initialize
     @texts = Text.all.map(&:text)
 
@@ -73,21 +68,12 @@ class Tweet
         end
       end
     else
-      # random_tweet_using_mecab
-      random_tweet_kt_remix
+      random_tweet_remix
     end
   end
 
   # 形態素解析して作文する
-  def random_tweet_using_mecab
-    @texts = @texts.rotate(rand(@texts.size))[0, 100]
-    dic = Hash.new { |hash, key| hash[key] = [] }
-    make_dic(dic)
-    tweet = choose_sentence(dic)
-    update(tweet)
-  end
-
-  def random_tweet_kt_remix
+  def random_tweet_remix
     @texts = Shuffle.all.map(&:sentence)
     @texts.rotate!(rand(@texts.size))
     dic = Hash.new { |hash, key| hash[key] = [] }
@@ -102,22 +88,6 @@ class Tweet
     text.gsub!(/\n+\z/, '')
     text << "\n" unless text[-1] =~ /。|！|？|─/
     slice_text(text)
-  end
-
-  def pull_users_timeline
-    shuffles = Shuffle.all.map(&:sentence)
-    @client.user_timeline("@ohnokazuo_bot", {count: 30}).map{ |t| t.text }.each do |t|
-      next if t.match(HTTPS)
-      unless shuffles.include?(t)
-        Shuffle.create({sentence: t})
-      end
-    end
-    @client.user_timeline("@T_Hijikata_bot", {count: 45}).map{ |t| t.text }.each do |t|
-      next if t.match(HTTPS)
-      unless shuffles.include?(t)
-        Shuffle.create({sentence: t})
-      end
-    end
   end
 
   private
@@ -243,10 +213,6 @@ class Tweet
 
   # マルコフ連鎖用辞書の作成
   def make_dic(dic)
-    # @texts.each do |t|
-    #   t.gsub!(/「.+?」。?|─.+?──?|【.+?】|『.+?』|\[.+?\]/, '')
-    #   t.gsub!(/「|」|（|）|"|“|”/, '')
-    # end
     nm = Natto::MeCab.new
     data = ['BEGIN','BEGIN']
     @texts.each do |t|
@@ -271,17 +237,6 @@ class Tweet
       tweets = from_sentence_to_tweets(text)
       next unless tweets
       ret = tweets.sample
-      # if ret.length <= TWEET_LIMIT - 80
-      #   # 吹き出しツイート
-      #   ret.gsub!(/\n|\r/, '')
-      #   return "＿人人人人人人人人人人人人人人＿\n" +
-      #     (ret.length / 12).times.map{  '＞　' + ret.slice!(0, 12) + '　＜' }.join("\n") +
-      #     "\n＞　" + ret + '　' * (12 - ret.length) + "　＜\n" +
-      #     "￣Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y^Y￣\n" + HASH_TAG_MECAB
-      # elsif ret.length <= TWEET_LIMIT - 3 -
-      #   END_OF_MECAB_TWEET.map{ |t| t.length }.max - HASH_TAG_MECAB.length
-      #   return ret + "\n" + '#' + END_OF_MECAB_TWEET.sample + "\n" + HASH_TAG_MECAB
-      # end
       if ret.length <= TWEET_LIMIT - 1 - HASH_TAG_KT.length
         return ret + "\n" + HASH_TAG_KT
       end

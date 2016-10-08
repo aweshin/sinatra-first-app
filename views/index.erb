@@ -1,4 +1,5 @@
 <h2>Twitter botを作成</h2>
+
 <table border="1" cellspacing="0" bordercolor="#000000">
     <tr>
         <th>種別</th>
@@ -6,75 +7,25 @@
         <th>内容</th>
         <th>テーマID</th>
         <th>メディアツイート</th>
+        <th></th>
     </tr>
     <tr>
-        <td>通常</td>
+        <td>1.通常</td>
         <td>登録テーマ毎</td>
         <td>登録文そのもの</td>
-        <td><a href="/theme">登録・変更︎</a></td>
-        <td><a href="/media">登録・削除</a></td>
+        <td><a href="/theme"><input type="submit" value="登録・変更" /></a></td>
+        <td><a href="/media"><input type="submit" value="登録・削除" /></a></td>
+        <td><a href="/normal"><input type="submit" value="登録へ" /></a></td>
     </tr>
     <tr>
-        <td>シャッフル</td>
+        <td>2.シャッフル</td>
         <td>テーマ間</td>
         <td>リミックス</td>
         <td></td>
         <td></td>
+        <td><a href="/shuffle"><input type="submit" value="登録へ" /></a></td>
     </tr>
 </table>
 
-<p>
-登録文章に改行が含まれていると、改行もツイートに反映されます。<br>
-ただし、141字以上の文は、文を区切って再登録してください。<br>
-また、１テーマごとに、【テーマID】からはじめ、──で終えてください。<br>
-（「シャッフル」の登録の場合は要りません）<br>
-<br>
-<b>文章をここに記入してください。</b><br>
-</p>
-
-<form method="post" action="/new">
-    <textarea name="sentence" rows="8" cols="80"><% if @theme_no %>【<%= @theme_no %>】<% end %></textarea><br>
-    <p>
-    <input type="radio" name="normal" value="on" checked="checked" />通常
-    <input type="radio" name="normal" value="off" />シャッフル
-    </p>
-    <input type="submit" value="登録" />
-</form>
-
-<p>
-<% if !@texts %>
-<font color="red">141文字以上の文が含まれています。</font>
-<% end %>
-<% if @twice %>
-<font color="red">重複登録です</font>
-<% end %>
-<% if @done %>
-<font color="magenta">登録しました</font>
-<% end %>
-</p>
 
 <p><a href='/logout'>ログアウト</a></p>
-<ul>
-    <p>ただいまの通常ツイート登録数: <%= @tweets.size %></p>
-    <p>メディアツイート：●</p>
-    <% @tweets.each do |tweet| %>
-    <li data-id="<%= tweet.sentence_id %>">
-        <%= tweet.text %>
-        <% if tweet.media %>●<% end %>
-        <span class="deleteCmd" style="cursor:pointer;color:blue">[x]</span>
-    </li>
-    <% end %>
-</ul>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-<script>
-    $('.deleteCmd').click(function() {
-        var el = $(this).parent();
-        if (confirm('are you sure to delete?')) {
-            $.post('/delete', {
-                id: el.data('id')
-            }, function() {
-                el.fadeOut(800);
-            });
-        }
-    })
-</script>

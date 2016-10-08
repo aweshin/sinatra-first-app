@@ -1,0 +1,20 @@
+<h3>2.シャッフル</h3>
+<p>
+お気に入りのユーザーのツイートを、データベースに登録して、<br>
+ランダムにリミックスしてつぶやきます。
+</p>
+
+<form method="post" action="/shuffle_new">
+    @<input type="text" name="user" /> のユーザーの最新のタイムラインを<input type="number" name="count" min="1" max="200" />件取得
+    <font color="red">（最大200件まで）</font>
+    <p><input type="submit" value="DB登録" /></p>
+</form>
+
+<p>
+<% if @done %>
+<font color="magenta">登録しました</font>
+<% end %>
+</p>
+<p>
+<a href="/">戻る</a>
+</p>
