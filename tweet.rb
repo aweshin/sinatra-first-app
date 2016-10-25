@@ -7,7 +7,7 @@ require './models/sentence.rb'
 # 文字数制限140字
 TWEET_LIMIT = 140
 # メディアツイートの短縮URL
-MEDIA_URL_LENGTH = 24
+# MEDIA_URL_LENGTH = 24
 # 通常のURLの短縮版
 URL_LENGTH = 23
 # 重複ツイートのupload間隔(12時間)
@@ -21,6 +21,7 @@ INV_REUSE_RANGE = 10
 # MECAB_TWEETの連続数
 SEQUENCE_OF_REMIX = 1
 HASH_TAG_REMIX = '#awesremix'
+HASH_TAG_ORIGINAL = '#試験に出ない順英単語リミックス'
 
 HTTPS = /\s?https?.+?[\n\s　]|\s?https?.+/
 
@@ -54,7 +55,7 @@ class Tweet
         if tweet.media
           media_tweet(MediaTweet.where(tweet_id: tweet.id).map(&:media), t)
         else
-          if t[-1] == '!'
+          if t[-1] == '!'   # new!のとき
           # 分割ツイート
             text1, text2 = split_tweet(t)
             update(text1)
@@ -160,23 +161,23 @@ class Tweet
     end
     
     n = medias.size
-    # 分割ツイート
-    t1, t2 = split_tweet(tweet, MEDIA_URL_LENGTH * n)
+    # # 分割ツイート
+    # t1, t2 = split_tweet(tweet, MEDIA_URL_LENGTH * n)
 
     media_ids = (0...n).map{ |i| @client.upload(open("hoge_#{i}.png")) }
 
-    if t1.length + MEDIA_URL_LENGTH * n <= TWEET_LIMIT
+    # if t1.length + MEDIA_URL_LENGTH * n <= TWEET_LIMIT
       # media_idsは、media_idをstring型に変換。
       # 巨大数なので、json_decodeで「x.xxE+17」というような値に変換されてしまう
-      update(t1, { media_ids: media_ids.join(',') } )
-      update(t2) unless t2.empty?
-    else
-      update(t1)
-      update(t2, { media_ids: media_ids.join(',') } )
-    end
+    update(tweet, { media_ids: media_ids.join(',') } )
+    #   update(t2) unless t2.empty?
+    # else
+    #   update(t1)
+    #   update(t2, { media_ids: media_ids.join(',') } )
+    # end
   end
 
-  # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。
+  # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。(2016/9/20から撤廃)
   def split_tweet(tweet, add_words_length = 0)
     text = ''
     text_length = 0
@@ -190,6 +191,7 @@ class Tweet
     text.empty? ? [tweet, text] : [text, tweet]
   end
 
+  # リンクは、文字数（空欄含め23文字）に含まれる。(2016/9/20現在)
   def count_real_length(text)
     http_tweets = text.scan(HTTPS)
     http_tweets_count = http_tweets.size
@@ -233,8 +235,8 @@ class Tweet
       tweets = from_sentence_to_tweets(text)
       next unless tweets
       ret = tweets.sample
-      if ret.length <= TWEET_LIMIT - 1 - HASH_TAG_REMIX.length
-        return ret + "\n" + HASH_TAG_REMIX
+      if ret.length <= TWEET_LIMIT - 1 - HASH_TAG_REMIX.length - 1 - HASH_TAG_ORIGINAL.length
+        return ret + "\n" + HASH_TAG_REMIX + "\n" + HASH_TAG_ORIGINAL
       end
     end
   end

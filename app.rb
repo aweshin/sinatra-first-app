@@ -87,7 +87,7 @@ post '/shuffle_new' do
     shuffles = Shuffle.all.map(&:sentence)
     Tweet.new.client.user_timeline("@" + user, { count: count }).map{ |t| t.text }.each do |t|
       next if t.match('RT')
-      Shuffle.create({sentence: t.gsub(HTTPS, '').gsub(/#.+|【.+?】/, '').gsub(/「(.+?)」/, '\1')})
+      Shuffle.create({sentence: t.gsub(/#{HTTPS}|#.+|【.+?】|".+?"|\w|[\.\n\s　]/, '').gsub(/「(.+?)[？?]?」/, '\1。')})
     end
     session[:done] = true
     redirect '/shuffle'
@@ -198,4 +198,8 @@ end
 get '/error' do
   @title = 'エラー'
   erb :error
+end
+
+get '/normal_tweet' do
+  Tweet.new.normal_tweet
 end
