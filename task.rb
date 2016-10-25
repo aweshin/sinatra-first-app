@@ -1,2 +1,2 @@
 require './tweet.rb'
-Tweet.new.random_tweet_remix
+Tweet.new.normal_tweet

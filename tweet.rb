@@ -74,7 +74,7 @@ class Tweet
   def from_sentence_to_tweets(text)
     # 句点（に準ずるもの）と改行文字で文章を区切る。
     text.gsub!(/\n+\z/, '')
-    text << "\n" unless text[-1] =~ /。|！|？|─/
+    text << "\n" unless text[-1] =~ /[。？\?！\!─]/
     slice_text(text)
   end
 
