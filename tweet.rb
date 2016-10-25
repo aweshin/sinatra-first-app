@@ -19,11 +19,8 @@ END_OF_THEME = '─'
 INV_REUSE_RANGE = 10
 
 # MECAB_TWEETの連続数
-SEQUENCE_OF_MECAB_TWEET = 1
-# 大野一雄&土方巽の言葉をremixして連続ツイート
-SEQUENCE_OF_KT_REMIX = 1
-# HASH_TAG_MECAB = '#ほぼ駄文ですが'
-HASH_TAG_KT = '#KT_REMIX'
+SEQUENCE_OF_REMIX = 1
+HASH_TAG_REMIX = '#awesremix'
 
 HTTPS = /\s?https?.+?[\n\s　]|\s?https?.+/
 
@@ -80,8 +77,6 @@ class Tweet
     slice_text(text)
   end
 
-  private
-
   # 形態素解析して作文する
   def random_tweet_remix
     @texts = Shuffle.all.map(&:sentence)
@@ -91,6 +86,8 @@ class Tweet
     tweet = choose_sentence(dic)
     update(tweet)
   end
+
+  private
 
   def slice_text(text)
     ret = []
@@ -108,13 +105,12 @@ class Tweet
     end
   end
 
-  # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_MECAB_TWEET分mecab_tweetし、復帰
+  # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_REMIX分mecab_tweetし、復帰
   def next_sentence_id
     current_id =
       Theme.find_by_sql("SELECT current_sentence_id FROM themes WHERE current_sentence_id > 0").map(&:current_sentence_id)[0]
 
-    # if @client.user_timeline(count: SEQUENCE_OF_MECAB_TWEET).map{ |t| delete_https(t.text)[-1] =~ /#{END_OF_THEME}|\!/ }.any?
-    if @client.user_timeline(count: SEQUENCE_OF_KT_REMIX).map{ |t| delete_https(t.text)[-1] =~ /#{END_OF_THEME}|\!/ }.any?
+    if @client.user_timeline(count: SEQUENCE_OF_REMIX).map{ |t| delete_https(t.text)[-1] =~ /#{END_OF_THEME}|\!/ }.any?
       # mecab_tweet
       return
     else
@@ -237,8 +233,8 @@ class Tweet
       tweets = from_sentence_to_tweets(text)
       next unless tweets
       ret = tweets.sample
-      if ret.length <= TWEET_LIMIT - 1 - HASH_TAG_KT.length
-        return ret + "\n" + HASH_TAG_KT
+      if ret.length <= TWEET_LIMIT - 1 - HASH_TAG_REMIX.length
+        return ret + "\n" + HASH_TAG_REMIX
       end
     end
   end
