@@ -6,12 +6,10 @@ require './models/sentence.rb'
 
 # 文字数制限140字
 TWEET_LIMIT = 140
-# メディアツイートの短縮URL
-# MEDIA_URL_LENGTH = 24
-# 通常のURLの短縮版
+
+# リンクのURLの短縮版
 URL_LENGTH = 23
-# 重複ツイートのupload間隔(12時間)
-INTERVAL = 12
+
 # テーマの終了記号
 END_OF_THEME = '─'
 
@@ -21,7 +19,9 @@ INV_REUSE_RANGE = 10
 # MECAB_TWEETの連続数
 SEQUENCE_OF_REMIX = 1
 HASH_TAG_REMIX = '#awesremix'
+MENTION_TWEET_ORIGINAL = '@NISE_TOEIC'
 HASH_TAG_ORIGINAL = '#試験に出ない順英単語リミックス'
+REMIX_TWEETS = 30
 
 HTTPS = /\s?https?.+?[\n\s　]|\s?https?.+/
 
@@ -80,8 +80,7 @@ class Tweet
 
   # 形態素解析して作文する
   def random_tweet_remix
-    @texts = Shuffle.all.map(&:sentence)
-    @texts.rotate!(rand(@texts.size))
+    @texts = Shuffle.all.map(&:sentence).rotate(rand(@texts.size))[0, REMIX_TWEETS]
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     tweet = choose_sentence(dic)
@@ -161,20 +160,8 @@ class Tweet
     end
     
     n = medias.size
-    # # 分割ツイート
-    # t1, t2 = split_tweet(tweet, MEDIA_URL_LENGTH * n)
-
     media_ids = (0...n).map{ |i| @client.upload(open("hoge_#{i}.png")) }
-
-    # if t1.length + MEDIA_URL_LENGTH * n <= TWEET_LIMIT
-      # media_idsは、media_idをstring型に変換。
-      # 巨大数なので、json_decodeで「x.xxE+17」というような値に変換されてしまう
     update(tweet, { media_ids: media_ids.join(',') } )
-    #   update(t2) unless t2.empty?
-    # else
-    #   update(t1)
-    #   update(t2, { media_ids: media_ids.join(',') } )
-    # end
   end
 
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。(2016/9/20から撤廃)
@@ -191,7 +178,7 @@ class Tweet
     text.empty? ? [tweet, text] : [text, tweet]
   end
 
-  # リンクは、文字数（空欄含め23文字）に含まれる。(2016/9/20現在)
+  # リンクは、文字数（23文字）に含まれる。(2016/9/20現在)
   def count_real_length(text)
     http_tweets = text.scan(HTTPS)
     http_tweets_count = http_tweets.size
@@ -235,8 +222,8 @@ class Tweet
       tweets = from_sentence_to_tweets(text)
       next unless tweets
       ret = tweets.sample
-      if ret.length <= TWEET_LIMIT - 1 - HASH_TAG_REMIX.length - 1 - HASH_TAG_ORIGINAL.length
-        return ret + "\n" + HASH_TAG_REMIX + "\n" + HASH_TAG_ORIGINAL
+      if ret.length <= TWEET_LIMIT - 1 - MENTION_TWEET_ORIGINAL.length - 1 - HASH_TAG_REMIX.length - 1 - HASH_TAG_ORIGINAL.length
+        return ret + "\n" + MENTION_TWEET_ORIGINAL + "\n" + HASH_TAG_REMIX + "\n" + HASH_TAG_ORIGINAL
       end
     end
   end

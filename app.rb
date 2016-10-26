@@ -84,11 +84,12 @@ post '/shuffle_new' do
   user = params[:user]
   count = params[:count].to_i
   if user && 0 < count && count <= 200
-    shuffles = Shuffle.all.map(&:sentence)
     Tweet.new.client.user_timeline("@" + user, { count: count }).map{ |t| t.text }.each do |t|
-      next if t.match('RT')
+      next if t =~ /RT|英単語|ボイメン|中山公式ブログ|出ない順/
+      shuffles = Shuffle.all.map(&:sentence)
       t += '。' if t[-1] =~ /[。？\?！\!]/
-      Shuffle.create({sentence: t.gsub(/#{HTTPS}|#.+|【.+?】|".+?"|“.+?”|[\.\n\s　a-zA-Z]/, '').gsub(/「(.+?)[？\?！\!]?」/, '\1'+'。')})
+      nt = t.gsub(/#{HTTPS}|#.+|【.+?】|".+?"|“.+?”|[\.\n\s　a-zA-Z]/, '').gsub(/「(.+?)[？\?！\!]?」/, '\1'+'。')
+      Shuffle.create({sentence: nt}) unless shuffles.include?(nt)
     end
     session[:done] = true
     redirect '/shuffle'
