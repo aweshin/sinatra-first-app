@@ -221,9 +221,9 @@ class Tweet
       text = connect(dic)
       tweets = from_sentence_to_tweets(text)
       next unless tweets
-      ret = tweets.sample
-      if ret.length <= TWEET_LIMIT - 1 - MENTION_TWEET_ORIGINAL.length - 1 - HASH_TAG_REMIX.length - 1 - HASH_TAG_ORIGINAL.length
-        return ret + "\n" + MENTION_TWEET_ORIGINAL + "\n" + HASH_TAG_REMIX + "\n" + HASH_TAG_ORIGINAL
+      ret = tweets[0]
+      if ret.length <= TWEET_LIMIT - MENTION_TWEET_ORIGINAL.length - 1 - HASH_TAG_REMIX.length - 1 - HASH_TAG_ORIGINAL.length
+        return ret + MENTION_TWEET_ORIGINAL + "\n" + HASH_TAG_REMIX + "\n" + HASH_TAG_ORIGINAL
       end
     end
   end
