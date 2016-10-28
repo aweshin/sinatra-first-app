@@ -22,6 +22,7 @@ HASH_TAG_REMIX = '#awesremix'
 MENTION_TWEET_ORIGINAL = '@NISE_TOEIC'
 HASH_TAG_ORIGINAL = '#試験に出ない順英単語リミックス'
 REMIX_TWEETS = 30
+TWEET_INTERVAL_TIME_SECONDS = 5
 
 HTTPS = /\s?https?.+?[\n\s　]|\s?https?.+/
 
@@ -189,7 +190,7 @@ class Tweet
   def update(tweet, media = nil)
     begin
       media ? @client.update(tweet, media) : @client.update(tweet)
-      sleep(1)
+      sleep(TWEET_INTERVAL_TIME_SECONDS)
     rescue => e
       STDERR.puts "[EXCEPTION] " + e.to_s
       exit 1
