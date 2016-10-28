@@ -18,11 +18,11 @@ INV_REUSE_RANGE = 10
 
 # MECAB_TWEETの連続数
 SEQUENCE_OF_REMIX = 1
+
 HASH_TAG_REMIX = '#awesremix'
 MENTION_TWEET_ORIGINAL = '@NISE_TOEIC'
 HASH_TAG_ORIGINAL = '#試験に出ない順英単語リミックス'
 REMIX_TWEETS = 30
-TWEET_INTERVAL_TIME_SECONDS = 5
 
 HTTPS = /\s?https?.+?[\n\s　]|\s?https?.+/
 
@@ -42,7 +42,7 @@ class Tweet
 
   def normal_tweet
     if index = next_sentence_id
-      tweets = Text.where(sentence_id: index)
+      tweets = Text.where(sentence_id: index).order("id")
 
       # テーマの終わり
       if delete_https(tweets.last.text)[-1] == END_OF_THEME
@@ -190,7 +190,6 @@ class Tweet
   def update(tweet, media = nil)
     begin
       media ? @client.update(tweet, media) : @client.update(tweet)
-      sleep(TWEET_INTERVAL_TIME_SECONDS)
     rescue => e
       STDERR.puts "[EXCEPTION] " + e.to_s
       exit 1
