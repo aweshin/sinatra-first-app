@@ -83,16 +83,15 @@ end
 post '/shuffle_new' do
   user = params[:user]
   count = params[:count].to_i
-  session[:remix_tweets] = params[:remix_tweets].to_i
   if user && 0 < count && count <= 2000
     timeline = Tweet.new.client.user_timeline("@" + user, { count: count })
     maxid = 0
     ((count - 1)/ 200 + 1).times do |i|
       timeline.map{ |t| t.text }.each do |t|
-        next if t =~ /RT|英単語|ボイメン|中山公式ブログ|出ない順/
+        next if t =~ /RT|英単語|ボイメン|中山|ブログ|出ない順|用例|ツイート/
         shuffles = Shuffle.all.map(&:sentence)
         t += '。' if t[-1] =~ /[。？\?！\!]/
-        nt = t.gsub(/#{HTTPS}|#.+|【.+?】|".+?"|“.+?”|[\.\n\s　a-zA-Z]/, '').gsub(/「(.+?)[？\?！\!]?」/, '\1'+'。')
+        nt = t.gsub(/#{HTTPS}|#.+|【.+?】|".+?"|“.+?”|[\.\n\s　a-zA-Z]|,|‘|’|"| (.+?)|'|“|”|-|→/, '').gsub(/「(.+?)[？\?！\!]?」/, '\1'+'。')
         Shuffle.create({sentence: nt}) unless shuffles.include?(nt)
       end
       maxid = timeline[-1].id - 1
