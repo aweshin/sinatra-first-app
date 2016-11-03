@@ -83,13 +83,20 @@ end
 post '/shuffle_new' do
   user = params[:user]
   count = params[:count].to_i
-  if user && 0 < count && count <= 200
-    Tweet.new.client.user_timeline("@" + user, { count: count }).map{ |t| t.text }.each do |t|
-      next if t =~ /RT|英単語|ボイメン|中山公式ブログ|出ない順/
-      shuffles = Shuffle.all.map(&:sentence)
-      t += '。' if t[-1] =~ /[。？\?！\!]/
-      nt = t.gsub(/#{HTTPS}|#.+|【.+?】|".+?"|“.+?”|[\.\n\s　a-zA-Z]/, '').gsub(/「(.+?)[？\?！\!]?」/, '\1'+'。')
-      Shuffle.create({sentence: nt}) unless shuffles.include?(nt)
+  session[:remix_tweets] = params[:remix_tweets].to_i
+  if user && 0 < count && count <= 2000
+    timeline = Tweet.new.client.user_timeline("@" + user, { count: count })
+    maxid = 0
+    ((count - 1)/ 200 + 1).times do |i|
+      timeline.map{ |t| t.text }.each do |t|
+        next if t =~ /RT|英単語|ボイメン|中山公式ブログ|出ない順/
+        shuffles = Shuffle.all.map(&:sentence)
+        t += '。' if t[-1] =~ /[。？\?！\!]/
+        nt = t.gsub(/#{HTTPS}|#.+|【.+?】|".+?"|“.+?”|[\.\n\s　a-zA-Z]/, '').gsub(/「(.+?)[？\?！\!]?」/, '\1'+'。')
+        Shuffle.create({sentence: nt}) unless shuffles.include?(nt)
+      end
+      maxid = timeline[-1].id - 1
+      timeline = Tweet.new.client.user_timeline("@" + user, { count: (i == count / 200 ? count % 200 : 200), max_id: maxid })
     end
     session[:done] = true
     redirect '/shuffle'
@@ -204,4 +211,8 @@ end
 
 get '/normal_tweet' do
   Tweet.new.normal_tweet
+end
+
+get '/random_tweet' do
+  Tweet.new.random_tweet_remix
 end
