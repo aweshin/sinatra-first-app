@@ -1,0 +1,58 @@
+<h3>各種設定(DB登録)</h3>
+
+<form method="post" action="/config_db_new">
+<table id="table" border="1" cellspacing="0" bordercolor="#000000">
+<thead>
+<tr>
+    <th>項目</th><th>更新前</th><th>更新後(追加の場合は、登録)</th>
+</tr>
+</thead>
+
+
+<tbody id="body">
+
+<% @json_data.each do |data| %>
+  <% data.to_a[1].each do |str| %>
+    <tr>
+        <td width="500">
+            <%= data.to_a[0] %>
+        </td>
+        <td width="200">
+            <%= h str %>
+        </td>
+        <td width="200">
+            <input type="text" name="<%= data.to_a[0] %>[<%= h str %>]" size="30"/>
+        </td>
+    </tr>
+  <% end %>
+    <tr>
+        <td><input type="button" value="追加" onclick="addCell(this)" /></td><td></td><td></td>
+    </tr>
+<% end %>
+
+</tbody>
+</table>
+<input type="submit" value="変更" />
+</form>
+<p><a href="/">ホームに戻る</a></p>
+
+
+<script>
+    function addCell(obj){  // セル追加
+        var tbody = document.getElementById("body");
+        // objの親の親のノードを取得し（つまりtr要素）、変数「tr」に代入
+        var tr = obj.parentNode.parentNode.previousElementSibling;
+        // tbodyタグ直下のノード（行）を複製し、変数「list」に代入
+        var list = tr.cloneNode(true);
+        // 複製した行の3番目のセルを指定し、変数「td5」に代入
+        var td2 = list.childNodes[2];
+        var td3 = list.childNodes[3];
+        var td5 = list.childNodes[5];
+        // 複製した行の2番目のセルの内容を空欄に置き換え
+        // 複製した行の3番目のセルの内容を置き換え
+        td2.innerHTML = '';
+        td3.innerHTML = '';
+        td5.innerHTML = '<input type="text" name="new" size="30"/>';
+        tbody.insertBefore(list, tr.nextSibling);
+    }
+</script>

@@ -3,31 +3,13 @@ require 'twitter'
 require 'natto'
 require 'aws-sdk-core'
 require './models/sentence.rb'
-
-# 文字数制限140字
-TWEET_LIMIT = 140
-
-# リンクのURLの短縮版
-URL_LENGTH = 23
-
-# テーマの終了記号
-END_OF_THEME = '─'
-
-# 再度ツイートする旧ツイートの範囲（逆数）
-INV_REUSE_RANGE = 10
-
-# MECAB_TWEETの連続数
-SEQUENCE_OF_REMIX = 1
-
-HASH_TAG_REMIX = '#awesremix'
-MENTION_TWEET_ORIGINAL = '@NISE_TOEIC'
-HASH_TAG_ORIGINAL = '#試験に出ない順英単語リミックス'
-REMIX_TWEETS = 30
+require 'json'
 
 HTTPS = /\s?https?.+?[\n\s　]|\s?https?.+/
 
+
 class Tweet
-  attr_reader :client
+  attr_reader :client, :end_of_theme
 
   def initialize
     @texts = Text.all.map(&:text)
@@ -38,6 +20,20 @@ class Tweet
       access_token:        ENV['TWITTER_ACCESS_TOKEN'],
       access_token_secret: ENV['TWITTER_ACCESS_TOKEN_SECRET']
     )
+
+    config = open('./config/config_tweet.json') do |io|
+      JSON.load(io)
+    end
+
+    @tweet_limit = config["ツイート文字数制限"].to_i
+    @url_length = config["リンクのURLの短縮版"].to_i
+    @end_of_theme = config["テーマの終了記号"]
+    @inv_reuse_range = config["再度ツイートする旧ツイートの範囲（逆数）"].to_i
+    @sequence_of_remix = config["random_tweet_remixの連続数"].to_i
+    @hash_tag_remix = config["random_tweet_remixのセルフハッシュタグ"]
+    @mention_tweet_remix = config["random_tweet_remix用DB登録アカウント"]
+    @hash_tag_original = config["random_tweet_remixのDB登録ハッシュタグ"]
+    @remix_tweets = config["random_tweet_remixのmecab辞書登録数"].to_i
   end
 
   def normal_tweet
@@ -45,7 +41,7 @@ class Tweet
       tweets = Text.where(sentence_id: index).order("id")
 
       # テーマの終わり
-      if delete_https(tweets.last.text)[-1] == END_OF_THEME
+      if delete_https(tweets.last.text)[-1] == @end_of_theme
         theme_no = choose_next_theme(Theme.find_by("current_sentence_id > 0").id, Theme.where(open: true).count)
         tweets[-1].text += '次は' + theme_no if theme_no
       else
@@ -71,17 +67,17 @@ class Tweet
     end
   end
 
-  # TWEET_LIMIT以内で文章を切る。
+  # @tweet_limit以内で文章を切る。
   def from_sentence_to_tweets(text)
     # 句点（に準ずるもの）と改行文字で文章を区切る。
     text.gsub!(/\n+\z/, '')
-    text << "\n" unless text[-1] =~ /[。？\?！\!─]/
+    text << "\n" unless text[-1] =~ /[。？\?！\!#{@end_of_theme}]/
     slice_text(text)
   end
 
   # 形態素解析して作文する
   def random_tweet_remix
-    @texts = Shuffle.all.map(&:sentence).rotate(rand(@texts.size))[0, REMIX_TWEETS]
+    @texts = Shuffle.all.map(&:sentence).rotate(rand(@texts.size))[0, @remix_tweets]
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     tweet = choose_sentence(dic)
@@ -93,25 +89,25 @@ class Tweet
   def slice_text(text)
     ret = []
     loop do
-      index = text[0,TWEET_LIMIT].rindex(/。|！|？|──|\n/)
+      index = text[0, @tweet_limit].rindex(/。|！|？|#{@end_of_theme}#{@end_of_theme}|\n/)
       unless index
         # alert「141文字以上の文が含まれています」を出す。
-        if text.size > TWEET_LIMIT
+        if text.size > @tweet_limit
           return
         else
-          return (text == END_OF_THEME || text.empty?) ? ret : ret << text
+          return (text == @end_of_theme || text.empty?) ? ret : ret << text
         end
       end
       ret << text.slice!(0, index + 1)
     end
   end
 
-  # 最新TWEETがそのテーマの終わりならば、SEQUENCE_OF_REMIX分mecab_tweetし、復帰
+  # 最新TWEETがそのテーマの終わりならば、@sequence_of_remix分mecab_tweetし、復帰
   def next_sentence_id
     current_id =
       Theme.find_by_sql("SELECT current_sentence_id FROM themes WHERE current_sentence_id > 0").map(&:current_sentence_id)[0]
 
-    if @client.user_timeline(count: SEQUENCE_OF_REMIX).map{ |t| delete_https(t.text)[-1] =~ /#{END_OF_THEME}|\!/ }.any?
+    if @client.user_timeline(count: @sequence_of_remix).map{ |t| delete_https(t.text)[-1] =~ /#{@end_of_theme}|\!/ }.any?
       # mecab_tweet
       return
     else
@@ -136,7 +132,7 @@ class Tweet
       Theme.find_by(id: next_id).update(current_sentence_id: func.call(next_theme))
       return '【' + next_theme.to_s + '】' + 'new!'
     else
-      range = size / INV_REUSE_RANGE
+      range = size / @inv_reuse_range
       next_theme = Theme.where(open: true).offset(rand(range)).first.theme_id
       Theme.find_by(theme_id: next_theme).destroy
       Theme.create({theme_id: next_theme, open: true, current_sentence_id: func.call(next_theme)})
@@ -170,10 +166,10 @@ class Tweet
     text = ''
     text_length = 0
     loop do
-      index = tweet.index(/。|！|？|──?/) || tweet.length - 1
+      index = tweet.index(/[。？\?！\!#{@end_of_theme}]/) || tweet.length - 1
       break if index == -1
       text_length += index + 1 + count_real_length(tweet.slice(0, index + 1))
-      break if text_length > TWEET_LIMIT - add_words_length
+      break if text_length > @tweet_limit - add_words_length
       text += tweet.slice!(0, index + 1)
     end
     text.empty? ? [tweet, text] : [text, tweet]
@@ -184,7 +180,7 @@ class Tweet
     http_tweets = text.scan(HTTPS)
     http_tweets_count = http_tweets.size
     http_tweets_length = http_tweets.reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
-    URL_LENGTH * http_tweets_count - http_tweets_length
+    @url_length * http_tweets_count - http_tweets_length
   end
 
   def update(tweet, media = nil)
@@ -222,8 +218,8 @@ class Tweet
       tweets = from_sentence_to_tweets(text)
       next unless tweets
       ret = tweets[0]
-      if ret.length <= TWEET_LIMIT - MENTION_TWEET_ORIGINAL.length - 1 - HASH_TAG_REMIX.length - 1 - HASH_TAG_ORIGINAL.length
-        return ret + MENTION_TWEET_ORIGINAL + "\n" + HASH_TAG_REMIX + "\n" + HASH_TAG_ORIGINAL
+      if ret.length <= @tweet_limit - @mention_tweet_remix.length - 1 - @hash_tag_remix.length - 1 - @hash_tag_original.length
+        return ret + @mention_tweet_remix + "\n" + @hash_tag_remix + "\n" + @hash_tag_original
       end
     end
   end

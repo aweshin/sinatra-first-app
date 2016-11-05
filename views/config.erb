@@ -1,0 +1,23 @@
+<h3>各種設定</h3>
+
+<form method="post" action="/config_new">
+<table id="table" border="1" cellspacing="0" bordercolor="#000000">
+<thead>
+<tr>
+    <th>項目</th><th>変更前</th><th>変更後</th>
+</tr>
+</thead>
+
+<tbody>
+<% @json_data.each do |data| %>
+    <tr>
+        <td width="500"><%= data.to_a[0] %></td>
+        <td width="500"><%= data.to_a[1] %></td>
+        <td width="500"><input type="text" name="<%= data.to_a[0] %>" size="70"/></td>
+    </tr>
+<% end %>
+</tbody>
+</table>
+<input type="submit" value="変更" />
+</form>
+<p><a href="/">ホームに戻る</a></p>

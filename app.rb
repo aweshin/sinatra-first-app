@@ -4,6 +4,7 @@ require 'sinatra/reloader'
 require 'active_record'
 require './models/sentence.rb'
 require './tweet.rb'
+require 'json'
 
 enable :sessions
 
@@ -14,6 +15,10 @@ helpers do
     else
       return true
     end
+  end
+
+  def h(text)
+    Rack::Utils.escape_html(text)
   end
 end
 
@@ -35,6 +40,7 @@ get '/normal' do
   session[:theme_id] = nil
   @done = session[:done]
   session[:done] = false
+  @end_of_theme = Tweet.new.end_of_theme
   erb :normal
 end
 
@@ -83,15 +89,22 @@ end
 post '/shuffle_new' do
   user = params[:user]
   count = params[:count].to_i
+  config = open('./config/config_remix_ver_on_db.json') do |io|
+    JSON.load(io)
+  end
   if user && 0 < count && count <= 2000
+    delete_bind = Regexp.new(config["２つの記号に囲まれている文字を削除"].map{ |s| Regexp.escape(s) }.map{ |strs| strs[0, strs.length/2] + '.+?' + strs[strs.length/2..-1] }.join('|'))
+    delete_alone = Regexp.new(config["記号を削除"].map{ |s| Regexp.escape(s) if s.length == 1 }.join('|'))
+    put_end = Regexp.new(config["句点を追加"].map{ |s| Regexp.escape(s) }.map{ |strs| strs[0, strs.length/2] + '(.+?)[？\?！\!]?' + strs[strs.length/2..-1] }.join('|'))
+    p delete_alone
     timeline = Tweet.new.client.user_timeline("@" + user, { count: count })
     maxid = 0
     ((count - 1)/ 200 + 1).times do |i|
       timeline.map{ |t| t.text }.each do |t|
-        next if t =~ /RT|英単語|ボイメン|中山|ブログ|出ない順|用例|ツイート/
+        next if config["登録NGワード"].map{ |ng| t.include?(ng) }.any?
         shuffles = Shuffle.all.map(&:sentence)
-        t += '。' if t[-1] =~ /[。？\?！\!]/
-        nt = t.gsub(/#{HTTPS}|#.+|【.+?】|".+?"|“.+?”|[\.\n\s　a-zA-Z]|,|‘|’|"| (.+?)|'|“|”|-|→/, '').gsub(/「(.+?)[？\?！\!]?」/, '\1'+'。')
+        nt = t.gsub(/#{HTTPS}/, '').gsub(delete_bind, '').gsub(delete_alone, '').gsub(put_end, '\1'+'。')
+        nt += '。' unless nt[-1] =~ /[。？\?！\!]/
         Shuffle.create({sentence: nt}) unless shuffles.include?(nt)
       end
       maxid = timeline[-1].id - 1
@@ -201,6 +214,68 @@ post '/signup' do
   else
     redirect '/signup'
   end
+end
+
+get '/config' do
+  json_file_path = './config/config_tweet.json'
+
+  @json_data = open(json_file_path) do |io|
+    JSON.load(io)
+  end
+  erb :config
+end
+
+post '/config_new' do
+  json_file_path = './config/config_tweet.json'
+
+  json_data = open(json_file_path) do |io|
+    JSON.load(io)
+  end
+
+  json_data.each do |data|
+    json_data[data.to_a[0]] = params[data.to_a[0]] unless params[data.to_a[0]].empty?
+  end
+
+  open(json_file_path, 'w') do |io|
+    JSON.dump(json_data, io)
+  end
+  redirect '/'
+end
+
+get '/config_db' do
+  json_file_path = './config/config_remix_ver_on_db.json'
+
+  @json_data = open(json_file_path) do |io|
+    JSON.load(io)
+  end
+  erb :config_db
+end
+
+post '/config_db_new' do
+  json_file_path = './config/config_remix_ver_on_db.json'
+
+  json_data = open(json_file_path) do |io|
+    JSON.load(io)
+  end
+
+  json_data.each do |data|
+    strs = data.to_a[1].dup
+    strs.each do |item|
+      after = params[data.to_a[0]][item]
+      unless after.empty?
+        json_data[data.to_a[0]].delete(item)
+        json_data[data.to_a[0]] << after
+      end
+    end
+    if params[:new] && !params[:new].empty?
+      json_data[data.to_a[0]] << params[:new]
+    end
+  end
+
+  open(json_file_path, 'w') do |io|
+    JSON.dump(json_data, io)
+  end
+  redirect '/'
 end
 
 get '/error' do
