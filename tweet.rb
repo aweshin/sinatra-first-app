@@ -77,7 +77,7 @@ class Tweet
 
   # 形態素解析して作文する
   def random_tweet_remix
-    @texts = Shuffle.all.map(&:sentence).rotate(rand(@texts.size))[0, @remix_tweets]
+    @texts = Shuffle.all.map(&:sentence).sample(@remix_tweets)
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     tweet = choose_sentence(dic)
