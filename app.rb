@@ -251,6 +251,7 @@ get '/config_db' do
 end
 
 post '/config_db_new' do
+  p params
   json_file_path = './config/config_remix_ver_on_db.json'
 
   json_data = open(json_file_path) do |io|
@@ -262,21 +263,21 @@ post '/config_db_new' do
     strs.each do |item|
       # update
       after = params[data.to_a[0]][item]
-      unless after.empty?
+      if params["update"] && !after.empty?
         json_data[data.to_a[0]].delete(item)
         json_data[data.to_a[0]] << after
       end
     end
     # delete
     check = params[i.to_s]
-    if check
+    if check && params["delete"]
       check.each do |str, on|
         json_data[data.to_a[0]].delete(str)
       end
     end
     # insert
     add = params["new" + i.to_s]
-    if add
+    if add && params["update"]
       add.each do |str|
         json_data[data.to_a[0]] << str unless str.empty?
       end
