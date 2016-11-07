@@ -266,12 +266,12 @@ post '/config_db_new' do
         json_data[data.to_a[0]].delete(item)
         json_data[data.to_a[0]] << after
       end
-      # delete
-      check = params["#{i}"]
-      if check
-        check.each do |str, on|
-          json_data[data.to_a[0]].delete(str)
-        end
+    end
+    # delete
+    check = params[i.to_s]
+    if check
+      check.each do |str, on|
+        json_data[data.to_a[0]].delete(str)
       end
     end
     # insert
