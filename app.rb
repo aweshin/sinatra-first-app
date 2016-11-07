@@ -257,17 +257,29 @@ post '/config_db_new' do
     JSON.load(io)
   end
 
-  json_data.each do |data|
+  json_data.each_with_index do |data, i|
     strs = data.to_a[1].dup
     strs.each do |item|
+      # update
       after = params[data.to_a[0]][item]
       unless after.empty?
         json_data[data.to_a[0]].delete(item)
         json_data[data.to_a[0]] << after
       end
+      # delete
+      check = params["#{i}"]
+      if check
+        check.each do |str, on|
+          json_data[data.to_a[0]].delete(str)
+        end
+      end
     end
-    if params[:new] && !params[:new].empty?
-      json_data[data.to_a[0]] << params[:new]
+    # insert
+    add = params["new" + i.to_s]
+    if add
+      add.each do |str|
+        json_data[data.to_a[0]] << str unless str.empty?
+      end
     end
   end
 
