@@ -11,9 +11,15 @@
 <tbody>
 <% @json_data.each do |data| %>
     <tr>
+      <% if data.to_a[0] == '再度ツイートする旧ツイートの範囲（逆数）' %>
+        <td width="500"><%= data.to_a[0] %><%= '最大値:' + @inv_range_max.to_s  %></td>
+        <td width="500"><%= data.to_a[1] %></td>
+        <td width="500"><input type="number" name="<%= data.to_a[0] %>" min="1" max="<%= @inv_range_max %>" style="width:300px"/></td>
+      <% else %>
         <td width="500"><%= data.to_a[0] %></td>
         <td width="500"><%= data.to_a[1] %></td>
         <td width="500"><input type="text" name="<%= data.to_a[0] %>" size="70"/></td>
+      <% end %>
     </tr>
 <% end %>
 </tbody>

@@ -20,7 +20,11 @@
             <%= h str %>
         </td>
         <td width="200">
+          <% if data.to_a[0] =~ /特定の記号にくっついた文字列、または２つの記号に囲まれている文字を削除|句点を追加/ %>
+            <input type="text" name="<%= data.to_a[0] %>[<%= h str %>]" maxlength="2" size="30"/>
+          <% else %>
             <input type="text" name="<%= data.to_a[0] %>[<%= h str %>]" size="30"/>
+          <% end %>
         </td>
         <td>
             <input type="checkbox" name="<%= i %>[<%= h str %>]" />
@@ -29,7 +33,7 @@
   <% end %>
 </tbody>
 </table>
-<input type="button" id="<%= i %>" value="追加" onclick="addCell(this);" />
+<input type="button" id="i<%= i %>" value="追加" onclick="addCell(this);" />
 </div>
 
 <% end %>
@@ -44,19 +48,23 @@
 <script>
     var $counter = 0
     function addCell(obj){  // セル追加
-        var id = obj.id
+        var id = obj.id[1]
         var tbody = document.getElementById("data"+id).childNodes[1];
         // tbodyタグ直下のノード（行）を複製し、変数「list」に代入
         var list = document.createElement("tr");
         // 複製した行の2番目のセルを指定し、変数「td2」に代入
-        list.innerHTML = '<td width="200"></td> \
-        <td width="200"> \
-            <input type="text" size="30"/> \
-        </td> \
+
+        list.innerHTML = '<td width="200"></td>';
+        if (id == "1" || id == "3") {
+            list.innerHTML += '<td width="200"><input type="text" maxlength="2" size="30"/>';
+        } else {
+            list.innerHTML += '<td width="200"><input type="text" size="30"/>';
+        }
+        list.innerHTML += '</td> \
         <td> \
             <input type="checkbox" /> \
         </td>';
-        list.childNodes[2].childNodes[1].setAttribute("id", $counter);
+        list.childNodes[1].childNodes[0].setAttribute("id", $counter);
         tbody.appendChild(list);
         document.getElementById($counter).name = "new" + id + "[]";
         $counter++;
