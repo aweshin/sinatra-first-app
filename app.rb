@@ -100,7 +100,6 @@ post '/shuffle_new' do
                          .map{ |strs| strs[0, strs.length/2] + '(.+?)[？\?！\!]?' + strs[strs.length/2..-1] }.join('|'))
     timeline = Tweet.new.client.user_timeline("@" + user, { count: count })
     maxid = 0
-            p delete_with
     ((count - 1)/ 200 + 1).times do |i|
       timeline.map{ |t| t.text }.each do |t|
         next if config["登録NGワード"].map{ |ng| t.include?(ng) }.any?
