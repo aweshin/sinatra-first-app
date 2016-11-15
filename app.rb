@@ -95,9 +95,9 @@ post '/shuffle_new' do
   if user && 0 < count && count <= 2000
     delete_with = Regexp.new(config["特定の記号にくっついた文字列、または２つの記号に囲まれている文字を削除"]
                              .map{ |s| s.length == 1 ? Regexp.escape(s) + '.+' : Regexp.escape(s[0]) + '.+?' + Regexp.escape(s[1]) }.join('|'))
-    delete_alone = Regexp.new(config["記号を削除"].map{ |s| s.length == 1 ? Regexp.escape(s) : '[' + s + ']' }.join('|'))
+    delete_alone = Regexp.new(config["記号を削除"].map{ |s| s.length == 1 ? Regexp.escape(s) : s }.join('|'))
     put_end = Regexp.new(config["句点を追加"].map{ |s| Regexp.escape(s) }
-                         .map{ |strs| strs[0, strs.length/2] + '(.+?)[。？\?！\!]+' + strs[strs.length/2..-1] }.join('|'))
+                         .map{ |strs| strs[0, strs.length/2] + '(.+?)[。？\?！\!]*' + strs[strs.length/2..-1] }.join('|'))
     timeline = Tweet.new.client.user_timeline("@" + user, { count: count })
     maxid = 0
     ((count - 1)/ 200 + 1).times do |i|
