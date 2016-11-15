@@ -97,7 +97,7 @@ post '/shuffle_new' do
                              .map{ |s| s.length == 1 ? Regexp.escape(s) + '.+' : Regexp.escape(s[0]) + '.+?' + Regexp.escape(s[1]) }.join('|'))
     delete_alone = Regexp.new(config["記号を削除"].map{ |s| s.length == 1 ? Regexp.escape(s) : '[' + s + ']' }.join('|'))
     put_end = Regexp.new(config["句点を追加"].map{ |s| Regexp.escape(s) }
-                         .map{ |strs| strs[0, strs.length/2] + '(.+?)[？\?！\!]?' + strs[strs.length/2..-1] }.join('|'))
+                         .map{ |strs| strs[0, strs.length/2] + '(.+?)[？\?！\!]+' + strs[strs.length/2..-1] }.join('|'))
     timeline = Tweet.new.client.user_timeline("@" + user, { count: count })
     maxid = 0
     ((count - 1)/ 200 + 1).times do |i|
@@ -106,6 +106,7 @@ post '/shuffle_new' do
         shuffles = Shuffle.all.map(&:sentence)
         nt = t.gsub(/#{HTTPS}/, '').gsub(delete_with, '').gsub(delete_alone, '').gsub(put_end, '\1'+'。')
         nt += '。' unless nt[-1] =~ /[。？\?！\!]/
+        nt.gsub(/[。？\?！\!]+(.+)/, '\1')
         Shuffle.create({sentence: nt}) unless shuffles.include?(nt)
       end
       maxid = timeline[-1].id - 1
