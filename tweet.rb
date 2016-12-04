@@ -50,6 +50,10 @@ class Tweet
       end
       tweets.each_with_index do |tweet, i|
         t = tweet.text
+        flag = true if t.length > @tweet_limit
+        # 分割ツイート
+        text1, text2 = split_tweet(t) if flag
+
         in_reply_to_status_id, medias = nil, nil
         # セルフリプライするか？
         if i != 0 && (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any?
@@ -57,14 +61,18 @@ class Tweet
         elsif tweet.media
           medias = MediaTweet.where(tweet_id: tweet.id).map(&:media)
         end
+
         if in_reply_to_status_id || medias
-          extra_tweet(t, medias, in_reply_to_status_id)
+          if flag
+            extra_tweet(text1, medias, in_reply_to_status_id)
+            extra_tweet(text2, medias, in_reply_to_status_id)
+          else
+            extra_tweet(t, medias, in_reply_to_status_id)
+          end
         else
-          if t[-1] == '!'   # new!のとき
-          # 分割ツイート
-            text1, text2 = split_tweet(t)
+          if flag
             update(text1)
-            update(text2) unless text2.empty?
+            update(text2)
           else
             update(t)
           end
