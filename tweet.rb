@@ -34,6 +34,7 @@ class Tweet
     @mention_tweet_remix = config["random_tweet_remix用DB登録アカウント"]
     @hash_tag_original = config["random_tweet_remixのDB登録ハッシュタグ"]
     @remix_tweets = config["random_tweet_remixのmecab辞書登録数"].to_i
+    @reply_tweets = config["リプライツイートの登録文字"]
   end
 
   def normal_tweet
@@ -49,6 +50,10 @@ class Tweet
       end
       tweets.each do |tweet|
         t = tweet.text
+        # リプライするか？
+        if @reply_tweets.split(" ").map{ |word| t.include?(word) }.any?
+          t.insert(0, "@aweshinB ")
+        end
         if tweet.media
           media_tweet(MediaTweet.where(tweet_id: tweet.id).map(&:media), t)
         else
