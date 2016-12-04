@@ -51,7 +51,7 @@ class Tweet
       tweets.each_with_index do |tweet, i|
         t = tweet.text
         # セルフリプライするか？
-        if i != 0 && @reply_tweets.split(" ").map{ |word| t.include?(word) }.any?
+        if i != 0 && (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any?
           t.insert(0, "@AweshinB ")
         end
         if tweet.media
@@ -111,8 +111,9 @@ class Tweet
   def next_sentence_id
     current_id =
       Theme.find_by_sql("SELECT current_sentence_id FROM themes WHERE current_sentence_id > 0").map(&:current_sentence_id)[0]
-
-    if @client.user_timeline(count: @sequence_of_remix).map{ |t| delete_https(t.text)[-1] =~ /#{@end_of_theme}|\!/ }.any?
+    if @sequence_of_remix == 0
+      return current_id
+    elsif @client.user_timeline(count: @sequence_of_remix).map{ |t| delete_https(t.text)[-1] =~ /#{@end_of_theme}|\!/ }.any?
       # mecab_tweet
       return
     else
