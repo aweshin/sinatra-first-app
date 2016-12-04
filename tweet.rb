@@ -50,12 +50,15 @@ class Tweet
       end
       tweets.each_with_index do |tweet, i|
         t = tweet.text
+        in_reply_to_status_id, medias = nil, nil
         # セルフリプライするか？
         if i != 0 && (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any?
-          t.insert(0, "@AweshinB ")
+          in_reply_to_status_id = @client.user_timeline(count: 1)[0].id
+        elsif tweet.media
+          medias = MediaTweet.where(tweet_id: tweet.id).map(&:media)
         end
-        if tweet.media
-          media_tweet(MediaTweet.where(tweet_id: tweet.id).map(&:media), t)
+        if in_reply_to_status_id || medias
+          extra_tweet(t, medias, in_reply_to_status_id)
         else
           if t[-1] == '!'   # new!のとき
           # 分割ツイート
@@ -146,25 +149,33 @@ class Tweet
     end
   end
 
-  def media_tweet(medias, tweet)
-    # AWS
-    s3 = Aws::S3::Client.new
-    medias.each_with_index do |media, i|
-      File.open(File.basename("hoge_#{i}.png"), 'w') do |file|
-        begin
-          s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{media}") do |data|
-            file.write(data)
+  def extra_tweet(tweet, medias, reply)
+    media_ids = nil
+    if medias
+      # AWS
+      s3 = Aws::S3::Client.new
+      medias.each_with_index do |media, i|
+        File.open(File.basename("hoge_#{i}.png"), 'w') do |file|
+          begin
+            s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{media}") do |data|
+              file.write(data)
+            end
+          rescue => e
+            STDERR.puts "[EXCEPTION] " + e.to_s
+            exit 1
           end
-        rescue => e
-          STDERR.puts "[EXCEPTION] " + e.to_s
-          exit 1
         end
       end
+      n = medias.size
+      media_ids = (0...n).map{ |i| @client.upload(open("hoge_#{i}.png")) }
     end
-    
-    n = medias.size
-    media_ids = (0...n).map{ |i| @client.upload(open("hoge_#{i}.png")) }
-    update(tweet, { media_ids: media_ids.join(',') } )
+    if media_ids && reply
+      update(tweet, { media_ids: media_ids.join(','), in_reply_to_status_id: reply })
+    elsif media_ids
+      update(tweet, { media_ids: media_ids.join(',') })
+    elsif reply
+      update(tweet, { in_reply_to_status_id: reply })
+    end
   end
 
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。(2016/9/20から撤廃)
@@ -189,9 +200,9 @@ class Tweet
     @url_length * http_tweets_count - http_tweets_length
   end
 
-  def update(tweet, media = nil)
+  def update(tweet, extra = nil)
     begin
-      media ? @client.update(tweet, media) : @client.update(tweet)
+      extra ? @client.update(tweet, extra) : @client.update(tweet)
     rescue => e
       STDERR.puts "[EXCEPTION] " + e.to_s
       exit 1
