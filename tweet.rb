@@ -48,10 +48,10 @@ class Tweet
       else
         Theme.find_by("current_sentence_id > 0").update(current_sentence_id: Sentence.all.map(&:id).select{ |i| index < i }.min)
       end
-      tweets.each do |tweet|
+      tweets.each_with_index do |tweet, i|
         t = tweet.text
-        # リプライするか？
-        if @reply_tweets.split(" ").map{ |word| t.include?(word) }.any?
+        # セルフリプライするか？
+        if i != 0 && @reply_tweets.split(" ").map{ |word| t.include?(word) }.any?
           t.insert(0, "@aweshinB ")
         end
         if tweet.media
