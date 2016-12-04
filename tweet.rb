@@ -52,7 +52,7 @@ class Tweet
         t = tweet.text
         # セルフリプライするか？
         if i != 0 && @reply_tweets.split(" ").map{ |word| t.include?(word) }.any?
-          t.insert(0, "@aweshinB ")
+          t.insert(0, "@AweshinB ")
         end
         if tweet.media
           media_tweet(MediaTweet.where(tweet_id: tweet.id).map(&:media), t)
