@@ -59,7 +59,6 @@ class Tweet
         # セルフリプライするか？
         if (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any? || @reply_tweets_begin.split.map{ |word| t.start_with?(word) }.any?
           in_reply_to_status_id = @client.user_timeline(count: 1)[0].id unless t[0] == '【' # テーマのはじめ
-        }
         elsif tweet.media
           medias = MediaTweet.where(tweet_id: tweet.id).map(&:media)
         end
