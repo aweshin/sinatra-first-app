@@ -48,7 +48,7 @@ class Tweet
       else
         Theme.find_by("current_sentence_id > 0").update(current_sentence_id: Sentence.all.map(&:id).select{ |i| index < i }.min)
       end
-      tweets.each_with_index do |tweet, i|
+      tweets.each do |tweet|
         t = tweet.text
         flag = true if t.length > @tweet_limit
         # 分割ツイート
@@ -56,8 +56,8 @@ class Tweet
 
         in_reply_to_status_id, medias = nil, nil
         # セルフリプライするか？
-        if i != 0 && (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any?
-          in_reply_to_status_id = @client.user_timeline(count: 1)[0].id
+        if (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any?
+          in_reply_to_status_id = @client.user_timeline(count: 1)[0].id unless t[0] == '【' # テーマのはじめ
         elsif tweet.media
           medias = MediaTweet.where(tweet_id: tweet.id).map(&:media)
         end
