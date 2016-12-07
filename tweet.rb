@@ -35,6 +35,7 @@ class Tweet
     @hash_tag_original = config["random_tweet_remixのDB登録ハッシュタグ"]
     @remix_tweets = config["random_tweet_remixのmecab辞書登録数"].to_i
     @reply_tweets = config["リプライツイートの登録文字"]
+    @reply_tweets_begin = config["リプライツイートの開始文字"]
   end
 
   def normal_tweet
@@ -56,8 +57,9 @@ class Tweet
 
         in_reply_to_status_id, medias = nil, nil
         # セルフリプライするか？
-        if (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any?
+        if (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any? || @reply_tweets_begin.split.map{ |word| t.start_with?(word) }.any?
           in_reply_to_status_id = @client.user_timeline(count: 1)[0].id unless t[0] == '【' # テーマのはじめ
+        }
         elsif tweet.media
           medias = MediaTweet.where(tweet_id: tweet.id).map(&:media)
         end
