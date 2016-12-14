@@ -62,7 +62,8 @@ class Tweet
         elsif (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any? || @reply_tweets_begin.split.map{ |word| t.start_with?(word) }.any?
           in_reply_to_status_id = @client.user_timeline(count: 1)[0].id
         else
-          in_reply_to_status_id = @client.user_timeline(count: 50).select{ |t| t.text[0] == '【' }[0].id
+          start = @client.user_timeline(count: 50).find{ |t| t.text[0] == '【' }
+          in_reply_to_status_id = start.id if start
         end
 
         if tweet.media
