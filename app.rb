@@ -93,18 +93,24 @@ post '/shuffle_new' do
     JSON.load(io)
   end
   if user && 0 < count && count <= 2000
-    delete_with = Regexp.new(config["特定の記号にくっついた文字列、または２つの記号に囲まれている文字を削除"]
-                             .map{ |s| s.length == 1 ? Regexp.escape(s) + '.+' : Regexp.escape(s[0]) + '.+?' + Regexp.escape(s[1]) }.join('|'))
+    less = config["特定の記号にくっついた文字列、または２つの記号に囲まれている文字を削除"].select{ |s| s.length <= 2 }
+    more = config["特定の記号にくっついた文字列、または２つの記号に囲まれている文字を削除"].select{ |s| s.length > 2 }
+    delete_with = Regexp.new(less.map{ |s| s.length == 1 ? Regexp.escape(s) + '.+' : Regexp.escape(s[0]) + '.+?' + Regexp.escape(s[1]) }.join('|'))
+    delete_with_letters = more.join('|')
     delete_alone = Regexp.new(config["記号を削除"].map{ |s| s.length == 1 ? Regexp.escape(s) : s }.join('|'))
     put_end = Regexp.new(config["句点を追加"].map{ |s| Regexp.escape(s) }
-                         .map{ |strs| strs[0, strs.length/2] + '(.+?)[。？\?！\!]*' + strs[strs.length/2..-1] }.join('|'))
+                         .map{ |strs| strs[0, strs.length/2] + '(.+?)[。？\?！\!]*' + strs[strs.length/2..-1] }.join('|')) unless config["句点を追加"].empty?
     timeline = Tweet.new.client.user_timeline("@" + user, { count: count })
     maxid = 0
     ((count - 1)/ 200 + 1).times do |i|
       timeline.map{ |t| t.text }.each do |t|
         next if config["登録NGワード"].map{ |ng| t.include?(ng) }.any?
         shuffles = Shuffle.all.map(&:sentence)
-        nt = t.gsub(/#{HTTPS}/, '').gsub(delete_with, '').gsub(delete_alone, '').gsub(put_end, '\1'+'。')
+        nt = t.gsub(/#{HTTPS}/, '')
+        nt.gsub!(delete_with, '') if delete_with
+        nt.gsub!(delete_alone, '') if delete_alone
+        nt.gsub!(/#{delete_with_letters}/, '') if delete_with_letters
+        nt.gsub!(put_end, '\1'+'。') if put_end
         nt += '。' unless nt[-1] =~ /[。？\?！\!]/
         nt.gsub(/[\s。？\?！\!]+(.+)/, '\1')
         Shuffle.create({sentence: nt}) unless shuffles.include?(nt)

@@ -55,7 +55,6 @@ class Tweet
         # 分割ツイート
         text1, text2 = split_tweet(t) if flag
 
-        in_reply_to_status_id, medias = nil, nil
         # リプライツイート
         if t[0] == '【' # テーマのはじめ
           # nothing
@@ -166,7 +165,6 @@ class Tweet
   end
 
   def extra_tweet(tweet, medias, reply)
-    media_ids = nil
     if medias
       # AWS
       s3 = Aws::S3::Client.new
@@ -231,9 +229,7 @@ class Tweet
     data = ['BEGIN','BEGIN']
     @texts.each do |t|
       nm.parse(t) do |a|
-        if a.surface != nil
-          data << a.surface
-        end
+        data << a.surface if a.surface
       end
     end
     data << 'END'
