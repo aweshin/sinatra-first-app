@@ -150,7 +150,7 @@ class Tweet
     # データの更新
     func =
       -> theme_no { query = '【' + theme_no.to_s + '】' + '%'
-        Sentence.find_by_sql("SELECT id FROM sentences WHERE sentence LIKE '#{query}'").map(&:id)[0] }
+        Text.find_by_sql("SELECT sentence_id FROM texts WHERE text LIKE '#{query}'").map(&:sentence_id)[0] }
     if next_id
       next_theme = Theme.find(next_id).theme_id
       Theme.find_by(id: next_id).update(current_sentence_id: func.call(next_theme))
