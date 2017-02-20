@@ -1,10 +1,19 @@
 <table border="1" cellspacing="0" bordercolor="#000000">
     <tr>
+        <th>ジャンル</th>
         <th>タイトル</th>
+        <th>刊行年月</th>
     </tr>
-    <% @books_list.each do |title| %>
+    <% @books_list.each do |str| %>
+        <% date = str.slice!(/\d{4}.\d{1,2}/) %>
         <tr>
-            <th><%= title[0..-2] %></th>
+            <th><%= str.split('/')[0] %></th>
+            <th><%= str.split('/')[1] %></th>
+            <th><%= date %>
         </tr>
     <% end %>
 </table>
+
+<p>
+<a href="/">戻る</a>
+</p>
