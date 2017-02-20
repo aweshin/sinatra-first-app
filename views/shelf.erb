@@ -4,7 +4,7 @@
         <th>タイトル</th>
         <th>ページ数</th>
     </tr>
-    <% @books_list.contents.map{ |file| file.split('/')[0, 2] }.inject(Hash.new(0)){|hash, a| hash[a] += 1; hash} do |(group, title), count| %>
+    <% @books_list.contents.map{ |file| file.split('/')[0, 2] }.inject(Hash.new(0)){|hash, a| hash[a] += 1; hash}.each do |(group, title), count| %>
         <tr>
             <th><%= group %></th>
             <th><%= title %></th>
