@@ -4,7 +4,7 @@
     </tr>
     <% @books_list.contents.each do |title| %>
         <tr>
-            <th><%= title %></th>
+            <th><%= title[0..-2] %></th>
         </tr>
     <% end %>
 </table>

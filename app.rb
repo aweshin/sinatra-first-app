@@ -37,10 +37,8 @@ get '/shelf' do
   @title = 'Aweshin Book Shelf'
   s3 = Aws::S3::Client.new
   groups_list = s3.list_objects(bucket: "aweshinbookshelf", delimiter: '/')
-  p groups_list
-  @books_list = groups_list.flat_map{ |object|
-
-    s3.list_objects(bucket: "aweshinbookshelf", prefix: "#{object.key}/", delimiter: '/')
+  @books_list = groups_list.common_prefixes.flat_map{ |object|
+    s3.list_objects(bucket: "aweshinbookshelf", prefix: "#{object.prefix}", delimiter: '/').common_prefixes.map{ |title| title.prefix }
   }
 
   erb :shelf
