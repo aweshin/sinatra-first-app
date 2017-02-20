@@ -27,12 +27,17 @@ end
 get '/' do
   if login?
     @title = 'Twitter bot'
-    s3 = Aws::S3::Client.new
-    @books_list = s3.list_objects(bucket: "aweshinbookshelf", max_keys: 10)
     erb :index
   else
     redirect '/login'
   end
+end
+
+get '/shelf' do
+  @title = 'Aweshin Book Shelf'
+  s3 = Aws::S3::Client.new
+  @books_list = s3.buckets['aweshinbookshelf']
+  erb :shelf
 end
 
 get '/normal' do

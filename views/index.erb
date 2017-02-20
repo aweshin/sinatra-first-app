@@ -31,19 +31,7 @@
 <p>2.シャッフルのDB登録に際しての設定変更は、<a href="/config_db">こちら</a></p>
 
 <h2>Aweshin Book Shelf</h2>
-
-<table border="1" cellspacing="0" bordercolor="#000000">
-    <tr>
-        <th>タイトル</th>
-        <th>ジャンル</th>
-        <th>ページ数</th>
-    </tr>
-    <% @books_list.contents.each do |object| %>
-        <tr>
-            <th><%= object.key %></th>
-        </tr>
-    <% end %>
-</table>
+<p><a href="/shelf">棚へ</a></p>
 
 
 <p><a href='/logout'>ログアウト</a></p>
