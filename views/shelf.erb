@@ -2,9 +2,9 @@
     <tr>
         <th>タイトル</th>
     </tr>
-    <% @books_list.each do |title| %>
+    <% @books_list.contents.each do |title| %>
         <tr>
-            <th><%= title.prefix %></th>
+            <th><%= title %></th>
         </tr>
     <% end %>
 </table>
