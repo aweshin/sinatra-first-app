@@ -1,12 +1,14 @@
 <table border="1" cellspacing="0" bordercolor="#000000">
     <tr>
-        <th>タイトル</th>
         <th>ジャンル</th>
+        <th>タイトル</th>
         <th>ページ数</th>
     </tr>
-    <% @books_list.contents.each do |group| %>
+    <% @books_list.contents.map{ |file| file.split('/')[0, 2] }.inject(Hash.new(0)){|hash, a| hash[a] += 1; hash} do |(group, title), count| %>
         <tr>
             <th><%= group %></th>
+            <th><%= title %></th>
+            <th><%= count %></th>
         </tr>
     <% end %>
 </table>
