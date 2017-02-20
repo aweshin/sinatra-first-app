@@ -36,7 +36,7 @@ end
 get '/shelf' do
   @title = 'Aweshin Book Shelf'
   s3 = Aws::S3::Client.new
-  groups_list = s3.list_objects(bucket: "aweshinbookshelf", delimiter: '/')
+  groups_list = s3.list_objects(bucket: "aweshinbookshelf", prefix: '', delimiter: '/')
   @books_list = groups_list.contents.flat_map{ |object|
     s3.list_objects(bucket: "aweshinbookshelf", prefix: "#{object.key}", delimiter: '/')
   }
