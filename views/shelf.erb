@@ -4,7 +4,7 @@
         <th>ジャンル</th>
         <th>ページ数</th>
     </tr>
-    <% @books_list.as_tree.children.select(&:branch?).map(&:prefix).each do |group| %>
+    <% @books_list.contents.each do |group| %>
         <tr>
             <th><%= group %></th>
         </tr>

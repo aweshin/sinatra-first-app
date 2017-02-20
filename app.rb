@@ -36,7 +36,7 @@ end
 get '/shelf' do
   @title = 'Aweshin Book Shelf'
   s3 = Aws::S3::Client.new
-  @books_list = s3.buckets['aweshinbookshelf']
+  @books_list = s3.list_objects(bucket: "aweshinbookshelf", delimiter: '/', max_keys: 10)
   erb :shelf
 end
 
