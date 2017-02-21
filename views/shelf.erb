@@ -1,12 +1,14 @@
 <table border="1" cellspacing="0" bordercolor="#000000">
     <tr>
+        <th>No.</th>
         <th>ジャンル</th>
         <th>タイトル</th>
         <th>刊行年月</th>
     </tr>
-    <% @books_list.each do |str| %>
+    <% @books_list.each_with_index do |str, i| %>
         <% date = str.slice!(/\d{4}.\d{1,2}/) %>
         <tr>
+            <th><%= i + 1 %></th>
             <th><%= str.split('/')[0] %></th>
             <th><%= str.split('/')[1] %></th>
             <th><%= date %>
