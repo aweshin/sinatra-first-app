@@ -36,6 +36,7 @@ class Tweet
     @remix_tweets = config["random_tweet_remixのmecab辞書登録数"].to_i
     @reply_tweets = config["リプライツイートの登録文字"]
     @reply_tweets_begin = config["リプライツイートの開始文字"]
+    @limit_of_sequence_of_texts = config["テーマごとのツイート登録数の上限数"].to_i
   end
 
   def normal_tweet
@@ -61,7 +62,7 @@ class Tweet
         elsif (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any? || @reply_tweets_begin.split.map{ |word| t.start_with?(word) }.any?
           in_reply_to_status_id = @client.user_timeline(count: 1)[0].id
         else
-          start = @client.user_timeline(count: 50).find{ |t| t.text[0] == '【' }
+          start = @client.user_timeline(count: @limit_of_sequence_of_texts).find{ |t| t.text[0] == '【' }
           in_reply_to_status_id = start.id if start
         end
 
