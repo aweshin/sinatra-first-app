@@ -6,7 +6,7 @@ ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || :development)
 
 
 class Sentence < ActiveRecord::Base
-  has_many :texts, dependent: :destroy
+  has_many :texts
   validates :sentence, presence: true
 end
 

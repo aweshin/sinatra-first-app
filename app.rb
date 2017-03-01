@@ -67,7 +67,7 @@ post '/new' do
   st = params[:sentence]
   @texts = Tweet.new.from_sentence_to_tweets(st.dup)
   if @texts && @texts[0] != "\n"
-    sentence = Sentence.create({sentence: st})
+    sentence_id = Text.all.order("sentence_id")[-1].sentence_id + 1
     @texts.each do |t|
       flag = false
       target_medias = []
@@ -77,7 +77,7 @@ post '/new' do
           flag = true
         end
       end
-      text = Text.create({text: t, media: flag, sentence_id: sentence.id})
+      text = Text.create({text: t, media: flag, sentence_id: sentence_id} )
       target_medias.map{ |m| m.update(tweet_id: text.id)}
     end
     # theme_id登録（していなかったとき）
@@ -88,7 +88,7 @@ post '/new' do
     themes = Theme.where(open: true)
     if themes && !themes.find_by("current_sentence_id > 0")
       query = '【' + themes.first.theme_id.to_s + '】' + '%'
-      id = Sentence.find_by_sql("SELECT id FROM texts WHERE text LIKE '#{query}'").map(&:id)[0]
+      id = Text.find_by_sql("SELECT sentence_id FROM texts WHERE text LIKE '#{query}'").map(&:sentence_id)[0]
       themes.first.update(current_sentence_id: id)
     end
     session[:done] = true
@@ -138,11 +138,11 @@ post '/shuffle_new' do
 end
 
 post '/delete' do
-  st = Sentence.find(params[:id])
-  if md = st.sentence[0,6].match(/【(\d+)】/)
+  st = Text.where(sentence_id: params[:id]).order("id")
+  if md = st[0].text[0,6].match(/【(\d+)】/)
     Theme.find_by(theme_id: md[1].to_i).destroy
   end
-  st.destroy
+  st.each{ |t| t.destroy }
   redirect '/normal'
 end
 

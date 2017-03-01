@@ -48,7 +48,7 @@ class Tweet
         theme_no = choose_next_theme(Theme.find_by("current_sentence_id > 0").id, Theme.where(open: true).count)
         tweets[-1].text += '次は' + theme_no if theme_no
       else
-        Theme.find_by("current_sentence_id > 0").update(current_sentence_id: Sentence.all.map(&:id).select{ |i| index < i }.min)
+        Theme.find_by("current_sentence_id > 0").update(current_sentence_id: Text.all.map(&:sentence_id).select{ |i| index < i }.min)
       end
       tweets.each do |tweet|
         t = tweet.text
