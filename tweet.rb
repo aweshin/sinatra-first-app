@@ -73,14 +73,14 @@ class Tweet
         if in_reply_to_status_id || medias
           if flag
             extra_tweet(text1, medias, in_reply_to_status_id)
-            extra_tweet(text2, medias, in_reply_to_status_id)
+            extra_tweet(text2, medias, in_reply_to_status_id) unless text2.empty?
           else
             extra_tweet(t, medias, in_reply_to_status_id)
           end
         else
           if flag
             update(text1)
-            update(text2)
+            update(text2) unless text2.empty?
           else
             update(t)
           end
@@ -201,7 +201,7 @@ class Tweet
     loop do
       index = tweet.index(/[。？\?！\!#{@end_of_theme}]/) || tweet.length - 1
       break if index == -1
-      text_length += index + 1 + count_real_length(tweet.slice(0, index + 1))
+      text_length += index + 1 + count_shortened_url_length(tweet.slice(0, index + 1))
       break if text_length > @tweet_limit - add_words_length
       text += tweet.slice!(0, index + 1)
     end
@@ -209,7 +209,7 @@ class Tweet
   end
 
   # リンクは、文字数（23文字）に含まれる。(2016/9/20現在)
-  def count_real_length(text)
+  def count_shortened_url_length(text)
     http_tweets = text.scan(HTTPS)
     http_tweets_count = http_tweets.size
     http_tweets_length = http_tweets.reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
