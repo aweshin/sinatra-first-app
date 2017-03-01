@@ -22,10 +22,6 @@ ActiveRecord::Schema.define(version: 20160928041029) do
     t.string "sentence"
   end
 
-  create_table "sentences", force: :cascade do |t|
-    t.string "sentence"
-  end
-
   create_table "texts", force: :cascade do |t|
     t.string  "text"
     t.boolean "media",       default: false

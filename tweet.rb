@@ -159,6 +159,7 @@ class Tweet
     else
       range = size / @inv_reuse_range
       next_theme = Theme.where(open: true).offset(rand(range)).first.theme_id
+      # /themesのviewが最新順になるようにソートするため、一度削除する。
       Theme.find_by(theme_id: next_theme).destroy
       Theme.create({theme_id: next_theme, open: true, current_sentence_id: func.call(next_theme)})
       return

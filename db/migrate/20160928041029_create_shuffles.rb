@@ -1,6 +1,6 @@
 class CreateShuffles < ActiveRecord::Migration
   def change
-    create_table :ohno_hijikata do |t|
+    create_table :shuffles do |t|
       t.string :sentence
     end
   end
