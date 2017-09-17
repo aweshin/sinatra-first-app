@@ -146,7 +146,7 @@ class Tweet
 
   # 新しいテーマを決める
   def choose_next_theme(id, size)
-    next_id = Theme.all.map(&:id).select{ |i| id < i }.min
+    next_id = Theme.where(open: true).map(&:id).select{ |i| id < i }.min
     Theme.find_by("current_sentence_id > 0").update(current_sentence_id: nil)
     # データの更新
     func =
