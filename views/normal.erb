@@ -35,6 +35,7 @@
                 <%= tweet.text %>
                 <% if tweet.media %>●<% end %>
                 <span class="deleteCmd" style="cursor:pointer;color:blue">[x]</span>
+                <%= tweet.sentence_id %>
             </li>
             <% end %>
         <% end %>
