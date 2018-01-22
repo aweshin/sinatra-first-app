@@ -34,8 +34,8 @@ class Tweet
     @mention_tweet_remix = config["random_tweet_remix用DB登録アカウント"]
     @hash_tag_original = config["random_tweet_remixのDB登録ハッシュタグ"]
     @remix_tweets = config["random_tweet_remixのmecab辞書登録数"].to_i
-    @reply_tweets = config["リプライツイートの登録文字"]
-    @reply_tweets_begin = config["リプライツイートの開始文字"]
+    # @reply_tweets = config["リプライツイートの登録文字"]
+    # @reply_tweets_begin = config["リプライツイートの開始文字"]
     @limit_of_sequence_of_texts = config["テーマごとのツイート登録数の上限数"].to_i
   end
 
@@ -52,18 +52,19 @@ class Tweet
       end
       tweets.each do |tweet|
         t = tweet.text
-        flag = true if t.length > @tweet_limit
+        flag = true if delete_https(t).length > @tweet_limit
         # 分割ツイート
         text1, text2 = split_tweet(t) if flag
 
         # リプライツイート
         if t[0] == '【' # テーマのはじめ
           # nothing
-        elsif (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any? || @reply_tweets_begin.split.map{ |word| t.start_with?(word) }.any?
-          in_reply_to_status_id = @client.user_timeline(count: 1)[0].id
+        # elsif (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any? || @reply_tweets_begin.split.map{ |word| t.start_with?(word) }.any?
+          # in_reply_to_status_id = @client.user_timeline(count: 1)[0].id
         else
-          start = @client.user_timeline(count: @limit_of_sequence_of_texts).find{ |t| t.text[0] == '【' }
-          in_reply_to_status_id = start.id if start
+          # start = @client.user_timeline(count: @limit_of_sequence_of_texts).find{ |t| t.text[0] == '【' }
+          # in_reply_to_status_id = start.id if start
+          in_reply_to_status_id = @client.user_timeline(count: 1)[0].id
         end
 
         if tweet.media
