@@ -123,6 +123,8 @@ post '/shuffle_new' do
         nt.gsub!(delete_alone, '') if delete_alone
         nt.gsub!(/#{delete_with_letters}/, '') if delete_with_letters
         nt.gsub!(put_end, '\1'+'。') if put_end
+        # nhk_newsのみ
+        nt += 'ンゴ'
         nt += '。' unless nt[-1] =~ /[。？\?！\!]/
         nt.gsub(/[\s。？\?！\!]+(.+)/, '\1')
         Shuffle.create({sentence: nt}) unless shuffles.include?(nt)
