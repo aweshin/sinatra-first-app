@@ -53,7 +53,7 @@ class Tweet
       tweets.each do |tweet|
         t = tweet.text
         # 2017/11/08 - Twitterが文字数制限を緩和。日本語は140文字制限のままだが、半角英数字や記号を含む場合、その部分は「1文字」ではなく「0.5文字」とカウントされるようになった。
-        flag = true if delete_https(t).length + (t.match(HTTPS).to_s.length + 1) / 2 > @tweet_limit
+        flag = true if delete_https(t).length + (t.scan(HTTPS).map(&:length).inject(:+) + 1) / 2 > @tweet_limit
         # 分割ツイート
         text1, text2 = split_tweet(t) if flag
 
