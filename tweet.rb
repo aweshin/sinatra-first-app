@@ -107,7 +107,7 @@ class Tweet
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     # 詩系は句点削除
-    tweet = choose_sentence(dic).chop
+    tweet = choose_sentence(dic).gsub(/。/, '\n')
     update(tweet)
   end
 
