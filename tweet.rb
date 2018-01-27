@@ -32,7 +32,7 @@ class Tweet
     @sequence_of_remix = config["random_tweet_remixの連続数"].to_i
     @hash_tag_remix = config["random_tweet_remixのセルフハッシュタグ"]
     @mention_tweet_remix = config["random_tweet_remix用DB登録アカウント"]
-    @hash_tag_original = config["random_tweet_remixのDB登録ハッシュタグ"]
+    # @hash_tag_original = config["random_tweet_remixのDB登録ハッシュタグ"]
     @remix_tweets = config["random_tweet_remixのmecab辞書登録数"].to_i
     # @reply_tweets = config["リプライツイートの登録文字"]
     # @reply_tweets_begin = config["リプライツイートの開始文字"]
@@ -107,8 +107,9 @@ class Tweet
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     # 詩系は句点削除
-    tweet = choose_sentence(dic).gsub(/。/, "\n")
-    update(tweet)
+    tweet1, tweet2 = choose_sentence(dic).map{ |t| t.gsub(/。/, "\n") }
+    update(tweet1)
+    update(tweet2, { in_reply_to_status_id: @client.user_timeline(count: 1)[0].id }) unless tweet2.empty?
   end
 
   private
@@ -251,9 +252,18 @@ class Tweet
       text = connect(dic)
       tweets = from_sentence_to_tweets(text)
       next unless tweets
-      ret = tweets[0]
-      if ret.length <= @tweet_limit - @mention_tweet_remix.length - 1 - @hash_tag_remix.length - 1 - @hash_tag_original.length
-        return ret + @mention_tweet_remix + "\n" + @hash_tag_remix + "\n" + @hash_tag_original
+      tweet1, tweet2 = tweets
+      if tweet2
+        tweet2 += @mention_tweet_remix + "\n" + @hash_tag_remix
+        if tweet2 <= @tweet_limit
+          return [tweet1, tweet2]
+        end
+      else
+        if tweet1 <= @mention_tweet_remix.length + "\n" + @hash_tag_remix.length
+          return [tweet1 + @mention_tweet_remix + "\n" + @hash_tag_remix, tweet2]
+        else
+          return [tweet1, @mention_tweet_remix + "\n" + @hash_tag_remix]
+        end
       end
     end
   end
