@@ -255,11 +255,11 @@ class Tweet
       tweet1, tweet2 = tweets
       if tweet2
         tweet2 += @mention_tweet_remix + "\n" + @hash_tag_remix
-        if tweet2 <= @tweet_limit
+        if tweet2.length <= @tweet_limit
           return [tweet1, tweet2]
         end
       else
-        if tweet1 <= @mention_tweet_remix.length + "\n" + @hash_tag_remix.length
+        if tweet1.length <= @tweet_limit - @mention_tweet_remix.length - 1 - @hash_tag_remix.length
           return [tweet1 + @mention_tweet_remix + "\n" + @hash_tag_remix, tweet2]
         else
           return [tweet1, @mention_tweet_remix + "\n" + @hash_tag_remix]
