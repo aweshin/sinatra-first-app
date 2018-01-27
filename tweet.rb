@@ -109,7 +109,7 @@ class Tweet
     # 詩系は句点削除
     tweet1, tweet2 = choose_sentence(dic)
     update(tweet1)
-    update(tweet2, { in_reply_to_status_id: @client.user_timeline(count: 1)[0].id }) unless tweet2
+    update(tweet2, { in_reply_to_status_id: @client.user_timeline(count: 1)[0].id }) if tweet2
   end
 
   private
