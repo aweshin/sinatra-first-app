@@ -107,9 +107,9 @@ class Tweet
     dic = Hash.new { |hash, key| hash[key] = [] }
     make_dic(dic)
     # 詩系は句点削除
-    tweet1, tweet2 = choose_sentence(dic).map{ |t| t.gsub(/。/, "\n") }
+    tweet1, tweet2 = choose_sentence(dic)
     update(tweet1)
-    update(tweet2, { in_reply_to_status_id: @client.user_timeline(count: 1)[0].id }) unless tweet2.empty?
+    update(tweet2, { in_reply_to_status_id: @client.user_timeline(count: 1)[0].id }) unless tweet2
   end
 
   private
