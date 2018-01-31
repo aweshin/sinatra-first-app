@@ -259,7 +259,8 @@ class Tweet
           return [tweet1, tweet2]
         end
       else
-        if tweet1.length <= @tweet_limit - @mention_tweet_remix.length - 1 - @hash_tag_remix.length
+        # @mention_tweet_remixと@hash_tag_remixは半角とする(2017/11/08改定)
+        if tweet1.length <= @tweet_limit - (@mention_tweet_remix.length + 1 + @hash_tag_remix.length + 1) / 2
           return [tweet1 + @mention_tweet_remix + "\n" + @hash_tag_remix, tweet2]
         else
           return [tweet1, @mention_tweet_remix + "\n" + @hash_tag_remix]
