@@ -31,7 +31,7 @@ class Tweet
     @inv_reuse_range = config["再度ツイートする旧ツイートの範囲（逆数）"].to_i
     @sequence_of_remix = config["random_tweet_remixの連続数"].to_i
     @hash_tag_remix = config["random_tweet_remixのセルフハッシュタグ"]
-    @mention_tweet_remix = config["random_tweet_remix用DB登録アカウント"]
+    @mention_tweet_remix = ENV['RANDOM_TWEET_REMIX']
     # @hash_tag_original = config["random_tweet_remixのDB登録ハッシュタグ"]
     @remix_tweets = config["random_tweet_remixのmecab辞書登録数"].to_i
     # @reply_tweets = config["リプライツイートの登録文字"]
