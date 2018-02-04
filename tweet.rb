@@ -4,8 +4,7 @@ require 'natto'
 require 'aws-sdk-core'
 require './models/sentence.rb'
 require 'json'
-
-HTTPS = /\s?https?.+?[\n\s　]|\s?https?.+/
+require 'uri'
 
 
 class Tweet
@@ -32,10 +31,7 @@ class Tweet
     @sequence_of_remix = config["random_tweet_remixの連続数"].to_i
     @hash_tag_remix = config["random_tweet_remixのセルフハッシュタグ"]
     @mention_tweet_remix = "@" + ENV['RANDOM_TWEET_REMIX']
-    # @hash_tag_original = config["random_tweet_remixのDB登録ハッシュタグ"]
     @remix_tweets = config["random_tweet_remixのmecab辞書登録数"].to_i
-    # @reply_tweets = config["リプライツイートの登録文字"]
-    # @reply_tweets_begin = config["リプライツイートの開始文字"]
     @limit_of_sequence_of_texts = config["テーマごとのツイート登録数の上限数"].to_i
   end
 
@@ -53,18 +49,14 @@ class Tweet
       tweets.each do |tweet|
         t = tweet.text
         # 2017/11/08 - Twitterが文字数制限を緩和。日本語は140文字制限のままだが、半角英数字や記号を含む場合、その部分は「1文字」ではなく「0.5文字」とカウントされるようになった。
-        flag = true if delete_https(t).length + (count_shortened_url_length(t) + 1) / 2 > @tweet_limit
+        flag = true if downsize_unless_japanese(t) > @tweet_limit
         # 分割ツイート
         text1, text2 = split_tweet(t) if flag
 
         # リプライツイート
         if t[0] == '【' # テーマのはじめ
           # nothing
-        # elsif (@reply_tweets.split + [@end_of_theme]).map{ |word| t.include?(word) }.any? || @reply_tweets_begin.split.map{ |word| t.start_with?(word) }.any?
-          # in_reply_to_status_id = @client.user_timeline(count: 1)[0].id
         else
-          # start = @client.user_timeline(count: @limit_of_sequence_of_texts).find{ |t| t.text[0] == '【' }
-          # in_reply_to_status_id = start.id if start
           in_reply_to_status_id = @client.user_timeline(count: 1)[0].id
         end
 
@@ -145,7 +137,7 @@ class Tweet
   end
 
   def delete_https(tweet)
-    tweet.gsub(HTTPS, '')
+    tweet.gsub(URI.regexp(%w[http https]), '')
   end
 
   # 新しいテーマを決める
@@ -198,30 +190,26 @@ class Tweet
     end
   end
 
-  # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。(2016/9/20から撤廃)
+  # リンクは、文字数（23文字）に含まれる。(2016/9/20現在)。さらに半角とする(2017/11/08改定)
+  def downsize_unless_japanese(sentence)
+    sentence.length
+        - (URI.extract(sentence).map{ |http| [http.length, @url_length].min }.reduce(:+) || 0
+        + delete_https(sentence).split('').map{ |c| c.match(/[ -~｡-ﾟ\n]/) }.compact.count
+        - delete_https(sentence).split('').map{ |c| c.match(/[ｧ-ﾝﾞﾟ]/) } }.compact.count + 1) / 2
+  end
+
+  # (2016/9/20から)メディアツイートの文字数はカウントされない。
   def split_tweet(tweet)
     text = ''
     text_length = 0
     loop do
       index = tweet.index(/[。？\?！\!#{@end_of_theme}]/) || tweet.length - 1
       break if index == -1
-      text_length += index + 1
-      sentence = tweet.slice!(0, index + 1)
-      if sentence.match(HTTPS)
-        text_length -= sentence.scan(HTTPS).reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
-            - (count_shortened_url_length(sentence) + 1) / 2
-      end
+      text_length += downsize_unless_japanese(sentence)
       break if text_length > @tweet_limit
-      text += sentence
+      text += tweet.slice!(0, index + 1)
     end
     text.empty? ? [tweet, text] : [text, tweet]
-  end
-
-  # リンクは、文字数（23文字）に含まれる。(2016/9/20現在)。さらに半角とする(2017/11/08改定)
-  def count_shortened_url_length(sentence)
-    sentence.scan(HTTPS).map{
-      |t| (len = t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0)) < @url_length ? len : @url_length
-    }.reduce(:+) || 0
   end
 
   def update(tweet, extra = nil)
