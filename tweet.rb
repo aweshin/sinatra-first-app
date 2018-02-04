@@ -195,7 +195,7 @@ class Tweet
     sentence.length
         - (URI.extract(sentence).map{ |http| [http.length, @url_length].min }.reduce(:+) || 0
         + delete_https(sentence).split('').map{ |c| c.match(/[ -~｡-ﾟ\n]/) }.compact.count
-        - delete_https(sentence).split('').map{ |c| c.match(/[ｧ-ﾝﾞﾟ]/) } }.compact.count + 1) / 2
+        - delete_https(sentence).split('').map{ |c| c.match(/[ｧ-ﾝﾞﾟ]/) }.compact.count + 1) / 2
   end
 
   # (2016/9/20から)メディアツイートの文字数はカウントされない。
