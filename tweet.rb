@@ -205,7 +205,9 @@ class Tweet
     loop do
       index = tweet.index(/[。？\?！\!#{@end_of_theme}]/) || tweet.length - 1
       break if index == -1
-      text_length += index + 1 + count_shortened_url_length(tweet.slice(0, index + 1))
+      text_length += index + 1
+          - text.scan(HTTPS).reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
+          + (count_shortened_url_length(tweet.slice(0, index + 1)) + 1) / 2
       break if text_length > @tweet_limit
       text += tweet.slice!(0, index + 1)
     end
@@ -214,10 +216,9 @@ class Tweet
 
   # リンクは、文字数（23文字）に含まれる。(2016/9/20現在)。さらに半角とする(2017/11/08改定)
   def count_shortened_url_length(text)
-    http_tweets = text.scan(HTTPS)
-    http_tweets_count = http_tweets.size
-    http_tweets_length = http_tweets.reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
-    @url_length * http_tweets_count - http_tweets_length
+    text.scan(HTTPS).map{
+      |t| (len = t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0)) < @url_length ? len : @url_length
+    }.reduce(:+)
   end
 
   def update(tweet, extra = nil)
