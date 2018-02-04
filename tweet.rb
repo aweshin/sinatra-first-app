@@ -206,17 +206,20 @@ class Tweet
       index = tweet.index(/[。？\?！\!#{@end_of_theme}]/) || tweet.length - 1
       break if index == -1
       text_length += index + 1
-          - text.scan(HTTPS).reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
-          + (count_shortened_url_length(tweet.slice(0, index + 1)) + 1) / 2
+      sentence = tweet.slice!(0, index + 1)
+      if sentence.match(HTTPS)
+        text_length -= sentence.scan(HTTPS).reduce(0){ |s, t| s + t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0) }
+            - (count_shortened_url_length(sentence) + 1) / 2
+      end
       break if text_length > @tweet_limit
-      text += tweet.slice!(0, index + 1)
+      text += sentence
     end
     text.empty? ? [tweet, text] : [text, tweet]
   end
 
   # リンクは、文字数（23文字）に含まれる。(2016/9/20現在)。さらに半角とする(2017/11/08改定)
-  def count_shortened_url_length(text)
-    text.scan(HTTPS).map{
+  def count_shortened_url_length(sentence)
+    sentence.scan(HTTPS).map{
       |t| (len = t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0)) < @url_length ? len : @url_length
     }.reduce(:+)
   end
