@@ -53,7 +53,7 @@ class Tweet
       tweets.each do |tweet|
         t = tweet.text
         # 2017/11/08 - Twitterが文字数制限を緩和。日本語は140文字制限のままだが、半角英数字や記号を含む場合、その部分は「1文字」ではなく「0.5文字」とカウントされるようになった。
-        flag = true if delete_https(t).length + ((t.scan(HTTPS).map(&:length).inject(:+) || 0) + 1) / 2 > @tweet_limit
+        flag = true if delete_https(t).length + (count_shortened_url_length(t) + 1) / 2 > @tweet_limit
         # 分割ツイート
         text1, text2 = split_tweet(t) if flag
 
@@ -221,7 +221,7 @@ class Tweet
   def count_shortened_url_length(sentence)
     sentence.scan(HTTPS).map{
       |t| (len = t.length - (t[-1].match(/[\n\s　]/) ? 1 : 0)) < @url_length ? len : @url_length
-    }.reduce(:+)
+    }.reduce(:+) || 0
   end
 
   def update(tweet, extra = nil)
