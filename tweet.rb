@@ -199,20 +199,20 @@ class Tweet
   end
 
   # メディアツイートの文字数分減った場合、文字数制限が厳しくなる。(2016/9/20から撤廃)
-  def split_tweet(tweet, add_words_length = 0)
+  def split_tweet(tweet)
     text = ''
     text_length = 0
     loop do
       index = tweet.index(/[。？\?！\!#{@end_of_theme}]/) || tweet.length - 1
       break if index == -1
       text_length += index + 1 + count_shortened_url_length(tweet.slice(0, index + 1))
-      break if text_length > @tweet_limit - add_words_length
+      break if text_length > @tweet_limit
       text += tweet.slice!(0, index + 1)
     end
     text.empty? ? [tweet, text] : [text, tweet]
   end
 
-  # リンクは、文字数（23文字）に含まれる。(2016/9/20現在)
+  # リンクは、文字数（23文字）に含まれる。(2016/9/20現在)。さらに半角とする(2017/11/08改定)
   def count_shortened_url_length(text)
     http_tweets = text.scan(HTTPS)
     http_tweets_count = http_tweets.size
