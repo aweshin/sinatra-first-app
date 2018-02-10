@@ -192,10 +192,10 @@ class Tweet
 
   # リンクは、文字数（23文字）に含まれる。(2016/9/20現在)。さらに半角とする(2017/11/08改定)
   def downsize_unless_japanese(sentence)
-    sentence.length
-        - (URI.extract(sentence).map{ |http| [http.length, @url_length].min }.reduce(:+) || 0
-        + delete_https(sentence).split('').map{ |c| c.match(/[ -~｡-ﾟ\n]/) }.compact.count
-        - delete_https(sentence).split('').map{ |c| c.match(/[ｧ-ﾝﾞﾟ]/) }.compact.count + 1) / 2
+    half_char = delete_https(sentence).split('').map{ |c| c.match(/[ -~｡-ﾟ\n]/) }.compact.count
+    katakana = delete_https(sentence).split('').map{ |c| c.match(/[ｧ-ﾝﾞﾟ]/) }.compact.count
+    url_length = URI.extract(sentence).map{ |http| [http.length, @url_length].min }.reduce(:+) || 0
+    delete_https(sentence).length - (half_char - katakana) + (url_length + half_char - katakana + 1) / 2
   end
 
   # (2016/9/20から)メディアツイートの文字数はカウントされない。
