@@ -66,7 +66,7 @@ end
 post '/new' do
   st = params[:sentence]
   @texts = Tweet.new.from_sentence_to_tweets(st.dup)
-  if @texts && @texts[0] != "\n"
+  if @texts && @texts[0] != "\n" && !@texts.empty?
     sentence_id = Text.all.order("sentence_id")[-1].sentence_id + 1
     @texts.each do |t|
       flag = false

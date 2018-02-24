@@ -106,19 +106,26 @@ class Tweet
 
   private
 
-  def slice_text(text)
+  def slice_text(sentence)
     ret = []
     loop do
-      index = text[0, @tweet_limit].rindex(/。|！|？|#{@end_of_theme}#{@end_of_theme}|\n/)
-      unless index
-        # alert「141文字以上の文が含まれています」を出す。
-        if text.size > @tweet_limit
-          return
-        else
-          return (text == @end_of_theme || text.empty?) ? ret : ret << text
+      text = ''
+      text_length = 0
+      loop do
+        index = sentence.index(/。|！|？|\?|\!|#{@end_of_theme}#{@end_of_theme}|\n/)
+        unless index
+          if downsize_unless_japanese(sentence).size > @tweet_limit
+            # alert「141文字以上の文が含まれています」を出す。
+            return
+          else
+            return (sentence == @end_of_theme || sentence.empty?) ? ret : ret << (text + sentence)
+          end
         end
+        text_length += downsize_unless_japanese(sentence.slice(0, index + 1))
+        break if text_length > @tweet_limit
+        text += sentence.slice!(0, index + 1)
       end
-      ret << text.slice!(0, index + 1)
+      ret << text
     end
   end
 
@@ -205,7 +212,7 @@ class Tweet
     loop do
       index = tweet.index(/[。？\?！\!#{@end_of_theme}]/) || tweet.length - 1
       break if index == -1
-      text_length += downsize_unless_japanese(sentence)
+      text_length += downsize_unless_japanese(tweet.slice(0, index + 1))
       break if text_length > @tweet_limit
       text += tweet.slice!(0, index + 1)
     end
