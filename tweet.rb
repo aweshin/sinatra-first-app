@@ -89,7 +89,7 @@ class Tweet
   def from_sentence_to_tweets(text)
     # 句点（に準ずるもの）と改行文字で文章を区切る。
     text.gsub!(/\n+\z/, '')
-    text << "\n" unless text[-1] =~ /[。？\?！\!#{@end_of_theme}]/
+    # text << "\n" unless text[-1] =~ /[。？\?！\!#{@end_of_theme}]/
     slice_text(text)
   end
 
@@ -118,7 +118,9 @@ class Tweet
             # alert「141文字以上の文が含まれています」を出す。
             return
           else
-            return (sentence == @end_of_theme || sentence.empty?) ? ret : ret << (text + sentence)
+            return (sentence == @end_of_theme || sentence.empty?) ?
+                ((text == @end_of_theme || text.empty? ) ? ret : ret << text) :
+                ret << (text + sentence)
           end
         end
         text_length += downsize_unless_japanese(sentence.slice(0, index + 1))
