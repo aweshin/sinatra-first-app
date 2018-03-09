@@ -11,7 +11,7 @@ gem 'sinatra-activerecord'
 
 gem 'sqlite3', group: :development
 # 本番ではpostgressを使用する
-gem 'pg', group: :production
+gem 'pg', '~> 0.19.0', group: :production
 
 gem 'bcrypt'
 gem 'dotenv-rails'
