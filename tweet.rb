@@ -179,7 +179,7 @@ class Tweet
       medias.each do |media|
         begin
           s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{media}") do |data|
-            images << File.new(data)
+            images << data
           end
         rescue => e
           STDERR.puts "[EXCEPTION] " + e.to_s
