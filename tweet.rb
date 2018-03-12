@@ -187,9 +187,9 @@ class Tweet
         end
       end
     end
-    if media_ids && reply
+    if !images.empty? && reply
       @client.update_with_media(tweet, images, { in_reply_to_status_id: reply })
-    elsif media_ids
+    elsif !images.empty?
       @client.update_with_media(tweet, images)
     elsif reply
       update(tweet, { in_reply_to_status_id: reply })
