@@ -172,25 +172,28 @@ class Tweet
   end
 
   def extra_tweet(tweet, medias, reply)
-    images = []
     if medias
       # AWS
       s3 = Aws::S3::Client.new
-      medias.each do |media|
-        begin
-          s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{media}") do |data|
-            images << data
-          end
-        rescue => e
-          STDERR.puts "[EXCEPTION] " + e.to_s
-          exit 1
-        end
-      end
+      medias.each_with_index do |media, i|
+         File.open(File.basename("hoge_#{i}.png"), 'w') do |file|
+           begin
+             s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{media}") do |data|
+               file.write(data)
+             end
+           rescue => e
+             STDERR.puts "[EXCEPTION] " + e.to_s
+             exit 1
+           end
+         end
+       end
+       n = medias.size
+       media_ids = (0...n).map{ |i| open("hoge_#{i}.png") }
     end
-    if !images.empty? && reply
-      @client.update_with_media(tweet, images, { in_reply_to_status_id: reply })
-    elsif !images.empty?
-      @client.update_with_media(tweet, images)
+    if media_ids && reply
+      @client.update_with_media(tweet, media_ids, { in_reply_to_status_id: reply })
+    elsif media_ids
+      @client.update_with_media(tweet, media_ids)
     elsif reply
       update(tweet, { in_reply_to_status_id: reply })
     end
