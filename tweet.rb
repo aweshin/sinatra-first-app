@@ -172,10 +172,10 @@ class Tweet
   end
 
   def extra_tweet(tweet, medias, reply)
+    images = []
     if medias
       # AWS
       s3 = Aws::S3::Client.new
-      images = []
       medias.each do |media|
         begin
           s3.get_object(bucket: ENV['S3_BUCKET_NAME'], key: "media/#{media}") do |data|
