@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'twitter'
 require 'natto'
-require 'aws-sdk-v1'
+require 'aws-sdk-core'
 require './models/sentence.rb'
 require 'json'
 require 'uri'
