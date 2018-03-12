@@ -5,7 +5,7 @@ gem 'twitter'
 gem 'sinatra-contrib'
 gem 'natto'
 gem 'mecab', '0.996'
-gem 'aws-sdk', '~> 1'
+gem 'aws-sdk', '~>2'
 gem 'activerecord', '< 5.0.0'
 gem 'sinatra-activerecord'
 
