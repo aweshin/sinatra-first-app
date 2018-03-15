@@ -146,7 +146,7 @@ class Tweet
   end
 
   def delete_https(tweet)
-    tweet.gsub(URI.regexp(%w[http https]), '')
+    tweet.gsub('…', '').gsub(URI.regexp(%w[http https]), '')
   end
 
   # 新しいテーマを決める
