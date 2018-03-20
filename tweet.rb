@@ -164,7 +164,7 @@ class Tweet
     else
       range = size / @inv_reuse_range
       # 新しいものが選択される確率が高くなるようにする
-      next_theme = Theme.where(open: true).limit(range).map(&:theme_id).flat_map{ |t| t > 100 ? [t, t] : t }.sample
+      next_theme = Theme.where(open: true).order("id").limit(range).map(&:theme_id).flat_map{ |t| t > 100 ? [t, t] : t }.sample
 
       # /themesのviewが最新順になるようにソートするため、一度削除する。
       Theme.find_by(theme_id: next_theme).destroy
