@@ -118,9 +118,17 @@ class Tweet
             # alert「141文字以上の文が含まれています」を出す。
             return
           else
-            return (sentence == @end_of_theme || sentence.empty?) ?
-                ((text == @end_of_theme || text.empty? ) ? ret : ret << text) :
+            if sentence == @end_of_theme || sentence.empty?
+              return (text == @end_of_theme || text.empty? ) ? ret : ret << text
+            else
+              if text_length + downsize_unless_japanese(sentence) > @tweet_limit
+                ret << text
+                ret << sentence
+              else
                 ret << (text + sentence)
+              end
+              return ret
+            end
           end
         end
         text_length += downsize_unless_japanese(sentence.slice(0, index + 1))
