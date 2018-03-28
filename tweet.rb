@@ -114,7 +114,7 @@ class Tweet
       loop do
         index = sentence.index(/。|！|？|\?|\!|#{@end_of_theme}#{@end_of_theme}|\n/)
         unless index
-          if downsize_unless_japanese(sentence).size > @tweet_limit
+          if downsize_unless_japanese(sentence) > @tweet_limit
             # alert「141文字以上の文が含まれています」を出す。
             return
           else
