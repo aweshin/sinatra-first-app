@@ -104,6 +104,10 @@ class Tweet
     update(tweet2, { in_reply_to_status_id: @client.user_timeline(count: 1)[0].id }) if tweet2
   end
 
+  def delete_https(tweet)
+    tweet.gsub('…', '').gsub(URI.regexp(%w[http https]), '')
+  end
+
   private
 
   def slice_text(sentence)
@@ -151,10 +155,6 @@ class Tweet
     else
       return current_id
     end
-  end
-
-  def delete_https(tweet)
-    tweet.gsub('…', '').gsub(URI.regexp(%w[http https]), '')
   end
 
   # 新しいテーマを決める
