@@ -303,3 +303,8 @@ end
 get '/random_tweet' do
   Tweet.new.random_tweet_remix
 end
+
+#テスト用
+get '/post_tweet' do
+  Tweet.new.client.user_timeline("@aweshin_bot", { count: 50 }).map{ |t| Tweet.new.delete_https(t.text) }.join("\n")
+end
