@@ -306,5 +306,5 @@ end
 
 #テスト用
 get '/post_tweet' do
-  Tweet.new.client.user_timeline("@aweshin_bot", { count: 50 }).map{ |t| Tweet.new.delete_https(t.text) }.join("\n")
+  Tweet.new.client.user_timeline("@aweshin_bot", { count: 60 }).each{ |t| puts t.text }
 end
