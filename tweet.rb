@@ -105,7 +105,7 @@ class Tweet
   end
 
   def delete_https(tweet)
-    tweet.gsub(/[…\s], '').gsub(URI.regexp(%w[http https]), '')
+    tweet.gsub(/[…\s]/, '').gsub(URI.regexp(%w[http https]), '')
   end
 
   private
