@@ -117,6 +117,7 @@ class Tweet
       text_length = 0
       loop do
         index = sentence.index(/。|！|？|\?|\!|#{@end_of_theme}#{@end_of_theme}|\n/)
+
         unless index
           if downsize_unless_japanese(sentence) > @tweet_limit
             # alert「141文字以上の文が含まれています」を出す。
@@ -135,6 +136,10 @@ class Tweet
             end
           end
         end
+
+        # alert「141文字以上の文が含まれています」を出す。
+        return if index > @tweet_limit
+
         text_length += downsize_unless_japanese(sentence.slice(0, index + 1))
         break if text_length > @tweet_limit
         text += sentence.slice!(0, index + 1)
