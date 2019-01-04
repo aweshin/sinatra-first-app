@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 ruby '2.2.2'
-gem 'sinatra'
+gem 'sinatra', '~> 2.0.2'
 gem 'twitter'
 gem 'sinatra-contrib'
 gem 'natto'
