@@ -7,6 +7,7 @@ require './tweet.rb'
 require 'json'
 require 'aws-sdk-core'
 require 'uri'
+require 'cgi'
 
 enable :sessions
 
@@ -119,7 +120,7 @@ post '/shuffle_new' do
       timeline.map{ |t| t.text }.each do |t|
         next if config["登録NGワード"].map{ |ng| t.include?(ng) }.any?
         shuffles = Shuffle.all.map(&:sentence)
-        nt = t.gsub(URI.regexp(%w[http https]), '')
+        nt = CGI.unescapeHTML(t).gsub(URI.regexp(%w[http https]), '')
         nt.gsub!(delete_with, '') if delete_with
         nt.gsub!(delete_alone, '') if delete_alone
         nt.gsub!(/#{delete_with_letters}/, '') if delete_with_letters
