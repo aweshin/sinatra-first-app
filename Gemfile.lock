@@ -116,5 +116,8 @@ DEPENDENCIES
   sqlite3
   twitter
 
+RUBY VERSION
+   ruby 2.4.5p335
+
 BUNDLED WITH
-   1.10.6
+   2.0.1
